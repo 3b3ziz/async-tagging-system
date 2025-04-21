@@ -1,6 +1,6 @@
-# My Tagger
+# Async Tagging System
 
-A standalone post tagging and recommendation system that uses AI to automatically tag posts and builds a graph of relationships between posts, tags, and user interactions.
+A learning project demonstrating asynchronous content tagging using AI, graph databases, and job queues. The system automatically processes and tags content using OpenAI, stores relationships in Neo4j, and provides recommendations based on graph relationships.
 
 ## Features (Milestone 1)
 - Automatic post tagging using OpenAI's GPT models
@@ -19,6 +19,27 @@ A standalone post tagging and recommendation system that uses AI to automaticall
 - OpenAI API for AI tagging
 - Docker for local development
 
+## Project Structure
+```
+.
+├── db/                 # Database related code
+│   ├── client.ts      # Database client configuration
+│   └── schema.ts      # Database schema definitions
+├── jobs/              # Background jobs
+│   ├── worker.ts      # Post tagging worker
+│   ├── producers.ts   # Job queue producers
+│   └── tagQueue.ts    # Queue configuration
+├── lib/               # Shared utilities
+│   ├── redis.ts       # Redis client
+│   ├── openai.ts      # OpenAI client
+│   └── schemas.ts     # Shared schemas
+├── scripts/           # Utility scripts
+│   ├── test-connections.ts  # Database connection testing
+│   ├── migrate.ts     # Database migration
+│   └── feed.ts        # Feed generation
+└── docker-compose.yml # Local development services
+```
+
 ## Getting Started
 
 ### Prerequisites
@@ -30,8 +51,8 @@ A standalone post tagging and recommendation system that uses AI to automaticall
 
 1. Clone the repository
 ```bash
-git clone <repository-url>
-cd my-tagger
+git clone https://github.com/yourusername/async-tagging-system.git
+cd async-tagging-system
 ```
 
 2. Install dependencies
@@ -103,22 +124,6 @@ Access http://localhost:7474 with default credentials:
 ### Application
 - `NODE_ENV`: Environment (development/production)
 - `PORT`: Application port
-
-## Project Structure
-```
-.
-├── db/                 # Database related code
-│   ├── client.ts      # Database client configuration
-│   └── schema.ts      # Database schema definitions
-├── jobs/              # Background jobs
-│   └── worker.ts      # Post tagging worker
-├── lib/               # Shared utilities
-│   ├── redis.ts       # Redis client
-│   ├── openai.ts      # OpenAI client
-│   └── schemas.ts     # Shared schemas
-├── scripts/           # Utility scripts
-└── docker-compose.yml # Local development services
-```
 
 ## Next Steps (Planned)
 - [ ] User authentication
