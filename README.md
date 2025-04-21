@@ -51,7 +51,7 @@ A learning project demonstrating asynchronous content tagging using AI, graph da
 
 1. Clone the repository
 ```bash
-git clone https://github.com/yourusername/async-tagging-system.git
+git clone git@github.com:3b3ziz/async-tagging-system.git
 cd async-tagging-system
 ```
 
