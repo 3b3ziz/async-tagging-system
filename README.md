@@ -1,82 +1,128 @@
-# MyTagger
+# My Tagger
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+A standalone post tagging and recommendation system that uses AI to automatically tag posts and builds a graph of relationships between posts, tags, and user interactions.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is almost ready ✨.
+## Features (Milestone 1)
+- Automatic post tagging using OpenAI's GPT models
+- Dual database system:
+  - PostgreSQL for posts and user data
+  - Neo4j for tag relationships and graph queries
+- Background job processing with Redis and BullMQ
+- Environment-based configuration
+- Database visualization support
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/next?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+## Tech Stack
+- TypeScript
+- PostgreSQL with Drizzle ORM
+- Neo4j for graph database
+- Redis + BullMQ for job queue
+- OpenAI API for AI tagging
+- Docker for local development
 
-## Finish your CI setup
+## Getting Started
 
-[Click here to finish setting up your workspace!](https://cloud.nx.app/connect/JvcXVmXDyg)
+### Prerequisites
+- Node.js (v18+)
+- Docker and Docker Compose
+- pnpm (recommended) or npm
 
+### Setup
 
-## Run tasks
-
-To run the dev server for your app, use:
-
-```sh
-npx nx dev my-tagger
+1. Clone the repository
+```bash
+git clone <repository-url>
+cd my-tagger
 ```
 
-To create a production bundle:
-
-```sh
-npx nx build my-tagger
+2. Install dependencies
+```bash
+pnpm install
 ```
 
-To see all available targets to run for a project, run:
-
-```sh
-npx nx show project my-tagger
+3. Set up environment variables
+```bash
+cp .env.sample .env
+# Edit .env with your configuration
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
-
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Add new projects
-
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
-
-Use the plugin's generator to create new projects.
-
-To generate a new application, use:
-
-```sh
-npx nx g @nx/next:app demo
+4. Start the databases
+```bash
+docker-compose up -d
 ```
 
-To generate a new library, use:
-
-```sh
-npx nx g @nx/react:lib mylib
+5. Run database migrations
+```bash
+pnpm drizzle-kit generate:pg
+pnpm drizzle-kit push:pg
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+### Development
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+1. Test database connections
+```bash
+pnpm test:connections
+```
 
+2. Start the tagging worker
+```bash
+pnpm tsx jobs/worker.ts
+```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Database Visualization
 
-## Install Nx Console
+1. PostgreSQL (Drizzle Studio)
+```bash
+npx drizzle-kit studio --port 4984
+```
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+2. Neo4j Browser
+Access http://localhost:7474 with default credentials:
+- Username: neo4j
+- Password: password
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Environment Variables
 
-## Useful links
+### PostgreSQL
+- `PG_HOST`: Database host
+- `PG_PORT`: Database port
+- `PG_USER`: Database user
+- `PG_PASSWORD`: Database password
+- `PG_DATABASE`: Database name
 
-Learn more:
+### Redis
+- `REDIS_URL`: Redis connection URL
 
-- [Learn more about this workspace setup](https://nx.dev/nx-api/next?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### Neo4j
+- `NEO4J_URI`: Neo4j connection URI
+- `NEO4J_USER`: Neo4j username
+- `NEO4J_PASS`: Neo4j password
 
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### OpenAI
+- `OPENAI_API_KEY`: Your OpenAI API key
+
+### Application
+- `NODE_ENV`: Environment (development/production)
+- `PORT`: Application port
+
+## Project Structure
+```
+.
+├── db/                 # Database related code
+│   ├── client.ts      # Database client configuration
+│   └── schema.ts      # Database schema definitions
+├── jobs/              # Background jobs
+│   └── worker.ts      # Post tagging worker
+├── lib/               # Shared utilities
+│   ├── redis.ts       # Redis client
+│   ├── openai.ts      # OpenAI client
+│   └── schemas.ts     # Shared schemas
+├── scripts/           # Utility scripts
+└── docker-compose.yml # Local development services
+```
+
+## Next Steps (Planned)
+- [ ] User authentication
+- [ ] Post creation and interaction UI
+- [ ] Tag-based post recommendations
+- [ ] Advanced graph visualizations
+- [ ] API endpoints for post management
