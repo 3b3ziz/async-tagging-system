@@ -1,0 +1,38 @@
+---
+description: General principles for AI code assistance - emphasize verification over assumption and careful analysis.
+globs: 
+alwaysApply: true
+---
+## Core Principles for AI Code Assistance
+
+1.  **Verify before assuming**: Always check documentation, type definitions, and existing code before making assumptions about how code works or what formats are correct.
+
+2.  **Understand before changing**: Take time to understand the codebase structure, dependencies, and established patterns before proposing changes.
+
+3.  **Start with simple solutions**: Begin with the minimum necessary change. Avoid complex rewrites if a targeted fix is possible.
+
+## Analysis Before Action
+
+*   **Investigate Type Definitions First**: For external libraries, check official types first. Understand the type system before suggesting fixes. Verify that the specific interface/type definition includes the methods/properties actually being called in the code.
+*   **Explore Context**: Review related files, imports, and similar implementations in the project.
+*   **Read Errors Carefully**: Understand the full error message and its implications.
+*   **Test Assumptions Minimally**: Start with small, focused edits.
+
+## Implementation Guidelines
+
+*   **Use Native Types**: Prefer library/language built-in types *that match the specific usage*. If code calls `obj.methodA()`, ensure the suggested type for `obj` actually defines `methodA()`.
+*   **Explain Reasoning**: Justify choices and trade-offs.
+*   **Maintain Patterns**: Follow existing coding style and architecture.
+*   **Avoid Escape Hatches**: Do not use `any` or disable type checks as shortcuts.
+
+## Communication
+
+*   **Ask Questions**: Clarify ambiguities instead of guessing.
+*   **Acknowledge Uncertainty**: Differentiate between facts and possibilities.
+*   **Check Understanding**: Summarize problems before solving.
+
+## When Stuck
+
+*   **Research**: Use documentation or reliable examples instead of guessing.
+*   **Simplify**: Break down the problem.
+*   **Identify Gaps**: State what information is needed.
