@@ -1,0 +1,31 @@
+---
+description: Guideline for refactoring: Organize extracted logic into modules based on domain/entity (e.g., database, external API) rather than grouping by the specific consumer using the logic, promoting reusability and better architecture.
+globs: 
+alwaysApply: false
+---
+## Refactoring Principle: Organize by Domain/Entity
+
+When extracting helper functions or creating service logic, prioritize organizing the code based on the **domain** or **entity** it interacts with, rather than grouping helpers solely by the specific consumer or feature using them.
+
+**Rationale:**
+
+*   **Reusability:** Domain-specific functions (e.g., interacting with Neo4j, calling OpenAI, querying Postgres) are often needed by multiple parts of the application (different consumers, API routes, etc.). Grouping them by domain makes them easily discoverable and reusable.
+*   **Maintainability:** Changes related to a specific external service or database (e.g., updating an API client, changing a database schema) are localized to a single domain module.
+*   **Separation of Concerns:** Each module focuses on a specific responsibility (e.g., graph database logic, AI interaction, relational database logic).
+*   **Clearer Architecture:** The `lib/` or `services/` directory becomes a well-defined collection of domain capabilities.
+
+**Example Implementation:**
+
+Instead of creating consumer-specific helpers like `postCreatedHelpers.ts`, we refactored to create domain-specific modules:
+
+*   **Neo4j Interactions:** Logic related to Neo4j operations (like linking posts to tags) belongs in [lib/neo4j.ts](mdc:lib/neo4j.ts).
+*   **OpenAI Interactions:** Logic for calling the OpenAI API (like extracting tags) belongs in [lib/openai.ts](mdc:lib/openai.ts).
+*   **Postgres Interactions:** Logic for querying the Postgres database (like fetching posts) belongs in [lib/postgresService.ts](mdc:lib/postgresService.ts).
+
+**Avoid:** Grouping unrelated domain logic (Postgres, OpenAI, Neo4j) into a single file just because one consumer uses them all.
+
+Apply this principle when:
+
+*   Refactoring large functions or classes.
+*   Creating new service or utility functions.
+*   Organizing the `lib/` or equivalent directory.

@@ -1,0 +1,36 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+## Promote Modularity and Separation of Concerns
+
+When generating or refactoring code, always prioritize modularity and clear separation of concerns. Each module, function, or class should have a single, well-defined responsibility and minimal dependencies on unrelated parts of the codebase.
+
+**Guidelines:**
+
+- **Single Responsibility:** Design each file, class, or function to do one thing well. Avoid mixing unrelated logic.
+- **Explicit Interfaces:** Expose only what is necessary from each module. Use clear, typed interfaces or exports.
+- **Minimal Coupling:** Minimize dependencies between modules. If two modules must interact, define the interaction through a well-documented interface or contract.
+- **Reusability:** Write code that can be reused in other parts of the codebase without modification. Avoid hard-coding context-specific details.
+- **Encapsulation:** Hide internal details and implementation. Only expose what is needed for other modules to use the functionality.
+- **Directory Structure:** Organize files and directories to reflect logical boundaries and responsibilities, not just technical layers or consumers.
+
+**When to Apply:**
+
+- When creating new files, modules, or services
+- When refactoring existing code
+- When reviewing or generating code for new features
+
+**Example:**
+
+- Instead of placing unrelated utility functions in a single file, split them into separate modules based on their purpose (e.g., `dateUtils.ts` for date logic, `apiClient.ts` for API calls).
+- When adding a new feature, create a dedicated module for its logic, and only import what is necessary in other parts of the codebase.
+
+**Avoid:**
+
+- Large files with mixed responsibilities
+- Tight coupling between unrelated modules
+- Exposing internal details that should remain private
+
+Apply this principle to all code generation and refactoring to ensure a maintainable, scalable, and understandable codebase.
