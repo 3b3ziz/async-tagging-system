@@ -1,4 +1,4 @@
-import neo4j, { Driver } from 'neo4j-driver';
+import neo4j, { Driver, type Session } from 'neo4j-driver';
 import 'dotenv/config';
 
 let driver: Driver | null = null;
@@ -50,5 +50,50 @@ export async function closeNeo4jDriver(): Promise<void> {
     } catch (error) {
       console.error('Error closing Neo4j driver:', error);
     }
+  }
+}
+
+/**
+ * Creates or merges a Post node and links it to Tag nodes in Neo4j.
+ * @param driver The Neo4j driver instance.
+ * @param postId The ID of the post.
+ * @param postText The text content of the post (optional, for context if needed).
+ * @param tags An array of tag strings.
+ */
+export async function linkPostToTags(
+  driver: Driver,
+  postId: number | string, // Allow string or number for flexibility
+  postText: string, // Keep text for potential future use (e.g., updating Post properties)
+  tags: string[]
+): Promise<void> {
+  const session: Session = driver.session({ database: NEO4J_DATABASE });
+  console.log(`[Neo4j] Linking post ID ${postId} to tags: ${tags.join(', ')}`);
+  try {
+    // Use executeWrite for automatic transaction management and retries
+    await session.executeWrite(tx =>
+      tx.run(
+        `
+        MERGE (p:Post {id: $postId})
+        ON CREATE SET p.text = $postText // Optionally set text on create
+        ON MATCH SET p.text = $postText // Optionally update text on match
+        WITH p
+        UNWIND $tags AS tagName
+          MERGE (t:Tag {name: tagName})
+          MERGE (p)-[:HAS_TAG]->(t)
+        `,
+        {
+          postId: typeof postId === 'string' ? parseInt(postId, 10) : postId, // Ensure ID is number if needed by schema
+          postText: postText,
+          tags: tags,
+        }
+      )
+    );
+    console.log(`[Neo4j] Successfully linked post ID ${postId} to tags.`);
+  } catch (error) {
+    console.error(`[Neo4j] Error linking post ID ${postId} to tags:`, error);
+    // Rethrow or handle error as appropriate for the application
+    throw error;
+  } finally {
+    await session.close();
   }
 } 

@@ -1,7 +1,7 @@
 ---
-description: Guideline for refactoring: Organize extracted logic into modules based on domain/entity (e.g., database, external API) rather than grouping by the specific consumer using the logic, promoting reusability and better architecture.
+description: 
 globs: 
-alwaysApply: false
+alwaysApply: true
 ---
 ## Refactoring Principle: Organize by Domain/Entity
 

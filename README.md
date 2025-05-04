@@ -19,33 +19,42 @@ A learning project demonstrating asynchronous content tagging using AI, graph da
 my-tagger/
 ├── .github/             # GitHub Actions workflows
 ├── .vscode/             # VSCode settings
-├── db/                  # Database migrations and seeds
-│   ├── drizzle/         # Drizzle ORM migration files
-│   │   └── meta/
-│   └── schema.ts        # Database schema definitions
 ├── jobs/                # Background job processing
-│   ├── consumers/       # RabbitMQ consumers (to be added)
-│   ├── producers.ts     # Job producers (e.g., for seeding)
-│   ├── rabbitmqClient.ts # RabbitMQ client setup (to be added)
-│   └── mockPublisher.ts # Mock message publisher (to be added)
+│   ├── consumers/       # RabbitMQ consumers for events
+│   ├── rabbitmqClient.ts # RabbitMQ client setup
+│   └── startConsumers.ts # Entry point to start all consumers
 ├── lib/                 # Core libraries/utilities
 │   ├── neo4j.ts         # Neo4j driver setup
 │   ├── openai.ts        # OpenAI client setup
-│   └── schemas.ts     # Shared Zod schemas
-├── scripts/             # Utility scripts
-│   ├── seedPosts.ts     # Seed initial post data
-│   └── test-connections.ts # Test external service connections
+│   ├── messageSchemas.ts # Zod schemas for RabbitMQ messages
+│   └── schemas.ts       # Other shared Zod schemas (e.g., OpenAI response)
+├── scripts/             # Utility scripts (e.g., connection tests)
+│   └── test-connections.ts
+├── simulation/          # Components for simulating a platform
+│   ├── db/              # Postgres client and schema definitions
+│   ├── drizzle/         # Drizzle ORM migration files
+│   ├── drizzle.config.ts # Drizzle config for simulation DB
+│   ├── mockPublisher.ts # Simulates publishing events to RabbitMQ
+│   └── seedPosts.ts     # Seeds initial post data into Postgres
 ├── .editorconfig
 ├── .env.sample          # Environment variable template
 ├── .env                 # Local environment variables (ignored by git)
 ├── .gitignore
 ├── docker-compose.yml   # Docker services (Postgres, Neo4j, RabbitMQ)
-├── drizzle.config.ts    # Drizzle ORM configuration
 ├── package.json
 ├── pnpm-lock.yaml
 ├── README.md            # This file
 └── tsconfig.json
 ```
+
+**Simulation Directory (`simulation/`)**
+
+The `simulation/` directory contains components used to *simulate* a social media platform generating events. This includes:
+- A PostgreSQL database (`db/`, `drizzle/`, `drizzle.config.ts`) to store simulated posts.
+- A script to seed this database (`seedPosts.ts`).
+- A script (`mockPublisher.ts`) to publish `post.created` and `post.interacted` events to RabbitMQ, mimicking how a real platform might notify downstream services.
+
+This separation allows the core tagging service (`jobs/consumers/`) to be decoupled from the data source. The consumers only care about the messages received via RabbitMQ, not how they were generated.
 
 ## Getting Started
 
@@ -59,7 +68,7 @@ my-tagger/
 ### Running Locally
 
 1.  **Setup Environment:**
-    Copy `.env.sample` to `.env` and fill in your credentials (especially `OPENAI_API_KEY`, `NEO4J_URI`, `POSTGRES_URL`).
+    Copy `.env.sample` to `.env` and fill in your credentials (especially `OPENAI_API_KEY`, `NEO4J_URI`/`USERNAME`/`PASSWORD`, `RABBITMQ_URL`, and `PG_*` variables for the *simulation* database).
 
 2.  **Install Dependencies:**
     ```bash
@@ -71,19 +80,40 @@ my-tagger/
     docker-compose up -d # Starts postgres, neo4j, rabbitmq
     ```
 
-4. **Start the Consumer Service:**
+4. **(Optional) Prepare Simulation Database:**
+   If this is the first time or you need to reset the simulation database:
    ```bash
-   pnpm tsx jobs/startConsumers.ts
+   # Ensure tables are empty and schema is up-to-date
+   pnpm sim:db:reset
+   
+   # Generate SQL migration files (if schema changed)
+   # pnpm sim:db:generate 
+   # Apply migrations to the database
+   # pnpm sim:db:migrate
+   ```
+   *(Note: `sim:db:reset` already includes running migrations)*
+
+5. **(Optional) Reset Graph Database:**
+   To clear existing graph data before testing:
+   ```bash
+   pnpm sim:graph:reset
    ```
 
-5. **(Optional) Seed Data & Mock Events:**
-   *   Seed initial posts:
+6. **Start the Consumer Service:**
+   This service listens for messages from RabbitMQ.
+   ```bash
+   pnpm start:consumers
+   ```
+
+7. **(Optional) Run Simulation (after optional resets):**
+   These scripts interact with the simulation database and publish messages.
+   *   Seed initial posts into the simulation database:
        ```bash
-       pnpm tsx scripts/seedPosts.ts
+       pnpm sim:db:seed
        ```
-   *   Run the mock publisher to send events to RabbitMQ:
+   *   Run the mock publisher to send simulated events to RabbitMQ:
        ```bash
-       pnpm tsx jobs/mockPublisher.ts
+       pnpm sim:publish
        ```
 
 ### Monitoring
@@ -122,3 +152,26 @@ my-tagger/
 - [ ] Tag-based post recommendations
 - [ ] Advanced graph visualizations
 - [ ] API endpoints for post management
+
+## Viewer App
+
+A React-based viewer application is included to visualize posts and their tags. To use it:
+
+1. Run the tagging system test cycle:
+   ```
+   pnpm test:cycle
+   ```
+
+2. Start the API server:
+   ```
+   pnpm viewer:server
+   ```
+
+3. In a separate terminal, start the React app:
+   ```
+   pnpm viewer
+   ```
+
+4. Open a browser and navigate to `http://localhost:3000`
+
+The viewer displays posts from the mock data and shows the tags generated by OpenAI that are stored in Neo4j.

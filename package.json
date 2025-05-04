@@ -3,7 +3,15 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "test:connections": "tsx scripts/test-connections.ts"
+    "test:connections": "tsx scripts/test-connections.ts",
+    "test:cycle": "bash scripts/run-test-cycle.sh",
+    "start:consumers": "tsx jobs/startConsumers.ts",
+    "sim:graph:reset": "tsx simulation/graph/reset.ts",
+    "sim:publish": "tsx simulation/mockPublisher.ts",
+    "sim:view-tags": "tsx simulation/viewTags.ts",
+    "viewer": "cd viewer && npm start",
+    "viewer:server": "node viewer/server.js",
+    "viewer:graph": "echo 'Starting viewer server and app in graph mode...' && (npm run viewer:server & cd viewer && REACT_APP_INITIAL_TAB=graph npm start)"
   },
   "private": true,
   "dependencies": {
@@ -11,18 +19,16 @@
     "@types/uuid": "^9.0.8",
     "amqplib": "^0.10.7",
     "axios": "^1.7.2",
+    "cors": "^2.8.5",
     "dotenv": "^16.5.0",
-    "drizzle-orm": "^0.42.0",
+    "express": "^4.18.2",
     "neo4j-driver": "^5.28.1",
     "openai": "^4.95.1",
-    "pg": "^8.14.1",
     "zod": "^3.24.3"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
     "@types/node": "18.16.9",
-    "@types/pg": "^8.11.13",
-    "drizzle-kit": "^0.31.0",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",
     "prettier": "^2.6.2",

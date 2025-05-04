@@ -49,3 +49,14 @@ test-output
 
 # Environment variables
 .env
+
+# Drizzle
+drizzle/
+drizzle/meta/
+.drizzle-kit/
+
+# Simulation Drizzle Output (if different)
+simulation/drizzle/
+simulation/drizzle/meta/
+
+# Logs

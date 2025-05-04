@@ -1,17 +1,6 @@
 version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: my_tagger
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
   neo4j:
     image: neo4j:5
     environment:
@@ -35,6 +24,5 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
 
 volumes:
-  postgres_data:
   neo4j_data:
   rabbitmq_data: 

@@ -1,0 +1,64 @@
+{
+  "posts": [
+    {
+      "id": "101",
+      "userId": "user-1",
+      "text": "Exploring RabbitMQ for async communication! #rabbitmq #nodejs",
+      "createdAt": "2025-05-04T22:21:26.562Z",
+      "metadata": {
+        "language": "en",
+        "source": "web"
+      }
+    },
+    {
+      "id": "102",
+      "userId": "user-2",
+      "text": "Neo4j graph databases are powerful for connected data. #neo4j #graphdb",
+      "createdAt": "2025-05-04T22:21:26.562Z",
+      "metadata": {
+        "language": "en",
+        "source": "mobile"
+      }
+    },
+    {
+      "id": "103",
+      "userId": "user-1",
+      "text": "TypeScript + Node = faster iteration than Java, especially for smaller teams.",
+      "createdAt": "2025-05-04T22:21:26.562Z",
+      "metadata": {
+        "language": "en",
+        "source": "web"
+      }
+    },
+    {
+      "id": "104",
+      "userId": "user-2",
+      "text": "OpenAI for NLP tasks like tag extraction? Easy integration.",
+      "createdAt": "2025-05-04T22:21:26.562Z",
+      "metadata": {
+        "language": "en",
+        "source": "mobile"
+      }
+    }
+  ],
+  "interactions": [
+    {
+      "postId": "101",
+      "userId": "user-2",
+      "interactionType": "like",
+      "createdAt": "2025-05-04T22:21:26.562Z"
+    },
+    {
+      "postId": "102",
+      "userId": "user-1",
+      "interactionType": "comment",
+      "createdAt": "2025-05-04T22:21:26.562Z"
+    },
+    {
+      "postId": "101",
+      "userId": "user-1",
+      "interactionType": "view",
+      "createdAt": "2025-05-04T22:21:26.562Z"
+    }
+  ]
+} 
