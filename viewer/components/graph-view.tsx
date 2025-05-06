@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import type { NodeObject, LinkObject } from 'react-force-graph-2d';
 
 // Dynamically import ForceGraph2D to avoid SSR issues
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
@@ -18,21 +19,19 @@ const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
 })
 
 // Graph data interfaces
-interface GraphNode {
+interface GraphNode extends NodeObject {
   id: string
   type: string
   title: string
   properties: Record<string, any>
   color: string
   size: number
-  x?: number
-  y?: number
 }
 
-interface GraphLink {
+interface GraphLink extends LinkObject {
   id: string
-  source: string
-  target: string
+  source: string | GraphNode
+  target: string | GraphNode
   type: string
   color: string
   properties: Record<string, any>
@@ -66,170 +65,36 @@ export default function GraphView() {
     setError(null)
 
     try {
-      // Mock data for demonstration
-      const nodes: GraphNode[] = [
-        // Posts
-        {
-          id: "p1",
-          type: "Post",
-          title: "Learning React Basics",
-          properties: {
-            content: "React is a JavaScript library for building user interfaces.",
-            author: "John Doe",
-            created: "2023-05-15",
-          },
-          color: "#ff7e5f",
-          size: 8,
+      const response = await fetch('/api/graph')
+      if (!response.ok) {
+        throw new Error(`Failed to fetch graph data: ${response.statusText}`)
+      }
+      
+      const data = await response.json()
+      
+      // Transform API data to match our component's data structure
+      const transformedNodes: GraphNode[] = data.nodes.map((node: any) => ({
+        id: node.id,
+        type: node.type,
+        title: node.label,
+        properties: {
+          text: node.text,
+          ...node.properties
         },
-        {
-          id: "p2",
-          type: "Post",
-          title: "Advanced TypeScript Patterns",
-          properties: {
-            content: "TypeScript adds static typing to JavaScript.",
-            author: "Jane Smith",
-            created: "2023-06-22",
-          },
-          color: "#ff7e5f",
-          size: 8,
-        },
-        {
-          id: "p3",
-          type: "Post",
-          title: "Building with Next.js",
-          properties: {
-            content: "Next.js is a React framework for production.",
-            author: "John Doe",
-            created: "2023-07-10",
-          },
-          color: "#ff7e5f",
-          size: 8,
-        },
-        // Tags
-        {
-          id: "t1",
-          type: "Tag",
-          title: "React",
-          properties: {
-            category: "Framework",
-            popularity: 95,
-          },
-          color: "#1e88e5",
-          size: 6,
-        },
-        {
-          id: "t2",
-          type: "Tag",
-          title: "TypeScript",
-          properties: {
-            category: "Language",
-            popularity: 88,
-          },
-          color: "#1e88e5",
-          size: 6,
-        },
-        {
-          id: "t3",
-          type: "Tag",
-          title: "Next.js",
-          properties: {
-            category: "Framework",
-            popularity: 82,
-          },
-          color: "#1e88e5",
-          size: 6,
-        },
-        {
-          id: "t4",
-          type: "Tag",
-          title: "JavaScript",
-          properties: {
-            category: "Language",
-            popularity: 92,
-          },
-          color: "#1e88e5",
-          size: 6,
-        },
-      ]
+        color: node.type === 'post' ? '#ff7e5f' : '#1e88e5',
+        size: node.type === 'post' ? 8 : 6
+      }))
 
-      const links: GraphLink[] = [
-        // Post to Tag relationships
-        {
-          id: "r1",
-          source: "p1",
-          target: "t1",
-          type: "HAS_TAG",
-          color: "#2563eb",
-          properties: { relevance: 0.95 },
-        },
-        {
-          id: "r2",
-          source: "p1",
-          target: "t4",
-          type: "HAS_TAG",
-          color: "#2563eb",
-          properties: { relevance: 0.9 },
-        },
-        {
-          id: "r3",
-          source: "p2",
-          target: "t2",
-          type: "HAS_TAG",
-          color: "#2563eb",
-          properties: { relevance: 0.98 },
-        },
-        {
-          id: "r4",
-          source: "p2",
-          target: "t4",
-          type: "HAS_TAG",
-          color: "#2563eb",
-          properties: { relevance: 0.88 },
-        },
-        {
-          id: "r5",
-          source: "p3",
-          target: "t1",
-          type: "HAS_TAG",
-          color: "#2563eb",
-          properties: { relevance: 0.92 },
-        },
-        {
-          id: "r6",
-          source: "p3",
-          target: "t3",
-          type: "HAS_TAG",
-          color: "#2563eb",
-          properties: { relevance: 0.96 },
-        },
-        // Tag to Tag relationships
-        {
-          id: "r7",
-          source: "t1",
-          target: "t3",
-          type: "RELATED_TO",
-          color: "#10b981",
-          properties: { strength: 0.9 },
-        },
-        {
-          id: "r8",
-          source: "t1",
-          target: "t4",
-          type: "RELATED_TO",
-          color: "#10b981",
-          properties: { strength: 0.85 },
-        },
-        {
-          id: "r9",
-          source: "t2",
-          target: "t4",
-          type: "RELATED_TO",
-          color: "#10b981",
-          properties: { strength: 0.92 },
-        },
-      ]
+      const transformedLinks: GraphLink[] = data.links.map((link: any) => ({
+        id: `${link.source}-${link.target}`,
+        source: link.source,
+        target: link.target,
+        type: link.type,
+        color: link.type === 'HAS_TAG' ? '#2563eb' : '#10b981',
+        properties: link.properties || {}
+      }))
 
-      setGraphData({ nodes, links })
+      setGraphData({ nodes: transformedNodes, links: transformedLinks })
     } catch (err) {
       setError("Failed to load graph data. Please try again later.")
       console.error("Error fetching graph data:", err)
@@ -242,13 +107,13 @@ export default function GraphView() {
     fetchGraphData()
   }, [fetchGraphData])
 
-  const handleNodeClick = useCallback((node: GraphNode) => {
-    setSelectedNode(node)
+  const handleNodeClick = useCallback((node: NodeObject, event: MouseEvent) => {
+    setSelectedNode(node as GraphNode)
     setSelectedLink(null)
   }, [])
 
-  const handleLinkClick = useCallback((link: GraphLink) => {
-    setSelectedLink(link)
+  const handleLinkClick = useCallback((link: LinkObject, event: MouseEvent) => {
+    setSelectedLink(link as GraphLink)
     setSelectedNode(null)
   }, [])
 
@@ -297,6 +162,74 @@ export default function GraphView() {
       graphRef.current.zoomToFit(400)
     }
   }, [])
+
+  const nodeCanvasObject = useCallback((node: NodeObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
+    const graphNode = node as GraphNode
+    const fontSize = 12 / globalScale
+    const isPost = graphNode.type === "Post"
+
+    ctx.beginPath()
+    if (isPost) {
+      // Rectangle for Post nodes
+      const width = graphNode.size * 1.5
+      const height = graphNode.size * 0.8
+      ctx.fillStyle = graphNode.color
+      ctx.fillRect(node.x! - width / 2, node.y! - height / 2, width, height)
+    } else {
+      // Circle for Tag nodes
+      ctx.fillStyle = graphNode.color
+      ctx.arc(node.x!, node.y!, graphNode.size, 0, 2 * Math.PI)
+      ctx.fill()
+    }
+
+    // Node label
+    ctx.textAlign = "center"
+    ctx.textBaseline = "middle"
+    ctx.fillStyle = "white"
+    ctx.font = `${fontSize}px Sans-Serif`
+    ctx.fillText(graphNode.id, node.x!, node.y!)
+
+    // Node title if zoomed in
+    if (globalScale > 1.2) {
+      ctx.font = `${fontSize * 0.8}px Sans-Serif`
+      ctx.fillText(graphNode.title, node.x!, node.y! + fontSize * 1.2)
+    }
+  }, [])
+
+  const linkCanvasObject = useCallback((link: LinkObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
+    if (!showLabels) return
+
+    const graphLink = link as GraphLink
+    const start = link.source as NodeObject
+    const end = link.target as NodeObject
+
+    if (!start.x || !end.x) return
+
+    const textPos = {
+      x: start.x + (end.x - start.x) / 2,
+      y: start.y! + (end.y! - start.y!) / 2,
+    }
+
+    // Label background
+    const fontSize = 12 / globalScale
+    ctx.font = `${fontSize}px Sans-Serif`
+    const textWidth = ctx.measureText(graphLink.type).width
+    const bckgDimensions = [textWidth, fontSize].map((n) => n + fontSize * 0.8) as [number, number]
+
+    ctx.fillStyle = "rgba(255, 255, 255, 0.8)"
+    ctx.fillRect(
+      textPos.x - bckgDimensions[0] / 2,
+      textPos.y - bckgDimensions[1] / 2,
+      bckgDimensions[0],
+      bckgDimensions[1],
+    )
+
+    // Label text
+    ctx.textAlign = "center"
+    ctx.textBaseline = "middle"
+    ctx.fillStyle = graphLink.color
+    ctx.fillText(graphLink.type, textPos.x, textPos.y)
+  }, [showLabels])
 
   if (error) {
     return (
@@ -362,82 +295,20 @@ export default function GraphView() {
             <ForceGraph2D
               ref={graphRef}
               graphData={filteredData}
-              nodeLabel={(node: GraphNode) => `${node.type}: ${node.title}`}
-              nodeColor={(node: GraphNode) => node.color}
-              nodeVal={(node: GraphNode) => node.size}
-              linkColor={(link: GraphLink) => link.color}
+              nodeLabel={(node: NodeObject) => `${(node as GraphNode).type}: ${(node as GraphNode).title}`}
+              nodeColor={(node: NodeObject) => (node as GraphNode).color}
+              nodeVal={(node: NodeObject) => (node as GraphNode).size}
+              linkColor={(link: LinkObject) => (link as GraphLink).color}
               linkWidth={1.5}
               linkDirectionalArrowLength={6}
               linkDirectionalArrowRelPos={0.9}
-              linkLabel={(link: GraphLink) => (showLabels ? link.type : "")}
+              linkLabel={(link: LinkObject) => (showLabels ? (link as GraphLink).type : "")}
               linkCurvature={0.25}
               onNodeClick={handleNodeClick}
               onLinkClick={handleLinkClick}
-              nodeCanvasObject={(node: GraphNode, ctx, globalScale) => {
-                const fontSize = 12 / globalScale
-                const isPost = node.type === "Post"
-
-                ctx.beginPath()
-                if (isPost) {
-                  // Rectangle for Post nodes
-                  const width = node.size * 1.5
-                  const height = node.size * 0.8
-                  ctx.fillStyle = node.color
-                  ctx.fillRect(node.x! - width / 2, node.y! - height / 2, width, height)
-                } else {
-                  // Circle for Tag nodes
-                  ctx.fillStyle = node.color
-                  ctx.arc(node.x!, node.y!, node.size, 0, 2 * Math.PI)
-                  ctx.fill()
-                }
-
-                // Node label
-                ctx.textAlign = "center"
-                ctx.textBaseline = "middle"
-                ctx.fillStyle = "white"
-                ctx.font = `${fontSize}px Sans-Serif`
-                ctx.fillText(node.id, node.x!, node.y!)
-
-                // Node title if zoomed in
-                if (globalScale > 1.2) {
-                  ctx.font = `${fontSize * 0.8}px Sans-Serif`
-                  ctx.fillText(node.title, node.x!, node.y! + fontSize * 1.2)
-                }
-              }}
+              nodeCanvasObject={nodeCanvasObject}
               linkCanvasObjectMode={() => (showLabels ? "after" : undefined)}
-              linkCanvasObject={(link: GraphLink, ctx, globalScale) => {
-                if (!showLabels) return
-
-                const start = link.source as GraphNode
-                const end = link.target as GraphNode
-
-                if (!start.x || !end.x) return
-
-                const textPos = {
-                  x: start.x + (end.x - start.x) / 2,
-                  y: start.y! + (end.y! - start.y!) / 2,
-                }
-
-                // Label background
-                const fontSize = 12 / globalScale
-                ctx.font = `${fontSize}px Sans-Serif`
-                const textWidth = ctx.measureText(link.type).width
-                const bckgDimensions = [textWidth, fontSize].map((n) => n + fontSize * 0.8) as [number, number]
-
-                ctx.fillStyle = "rgba(255, 255, 255, 0.8)"
-                ctx.fillRect(
-                  textPos.x - bckgDimensions[0] / 2,
-                  textPos.y - bckgDimensions[1] / 2,
-                  bckgDimensions[0],
-                  bckgDimensions[1],
-                )
-
-                // Label text
-                ctx.textAlign = "center"
-                ctx.textBaseline = "middle"
-                ctx.fillStyle = link.color
-                ctx.fillText(link.type, textPos.x, textPos.y)
-              }}
+              linkCanvasObject={linkCanvasObject}
               cooldownTicks={100}
               width={800}
               height={700}

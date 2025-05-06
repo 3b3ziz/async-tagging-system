@@ -21,6 +21,19 @@ interface Tag {
   name: string
 }
 
+// Add an interface for the API responses
+interface TagsApiResponse {
+  postId?: string
+  tags?: string[]
+  [key: string]: any // Allow for other properties
+}
+
+// Interface for tag fetch results
+interface TagFetchResult {
+  postId: string
+  tags: string[]
+}
+
 export default function FeedView() {
   const [posts, setPosts] = useState<Post[]>([])
   const [tags, setTags] = useState<Tag[]>([])
@@ -35,62 +48,48 @@ export default function FeedView() {
     setError(null)
 
     try {
-      // In a real app, this would fetch from the actual API
-      // const response = await fetch("http://localhost:3001/api/feed")
-      // const data = await response.json()
-
-      // For demo purposes, we'll use mock data
-      const mockTags: Tag[] = [
-        { id: "t1", name: "React" },
-        { id: "t2", name: "TypeScript" },
-        { id: "t3", name: "Next.js" },
-        { id: "t4", name: "CSS" },
-        { id: "t5", name: "Frontend" },
-        { id: "t6", name: "Backend" },
-        { id: "t7", name: "JavaScript" },
-        { id: "t8", name: "UI/UX" },
-      ]
-
-      const mockPosts: Post[] = [
-        {
-          id: "p1",
-          content: "Learning React basics and building my first component",
-          tags: [mockTags[0], mockTags[4], mockTags[6]],
-        },
-        {
-          id: "p2",
-          content: "Advanced TypeScript patterns for better type safety",
-          tags: [mockTags[1], mockTags[4], mockTags[6]],
-        },
-        {
-          id: "p3",
-          content: "Building with Next.js: Server components and data fetching",
-          tags: [mockTags[0], mockTags[2], mockTags[4]],
-        },
-        {
-          id: "p4",
-          content: "CSS Grid layouts for responsive designs",
-          tags: [mockTags[3], mockTags[4], mockTags[7]],
-        },
-        {
-          id: "p5",
-          content: "React hooks deep dive: useEffect, useMemo, and useCallback",
-          tags: [mockTags[0], mockTags[4], mockTags[6]],
-        },
-        {
-          id: "p6",
-          content: "Building a REST API with Node.js and Express",
-          tags: [mockTags[5], mockTags[6]],
-        },
-        {
-          id: "p7",
-          content: "Designing user interfaces with Figma",
-          tags: [mockTags[7], mockTags[4]],
-        },
-      ]
-
-      setTags(mockTags)
-      setPosts(mockPosts)
+      // Fetch posts from API
+      const postsResponse = await fetch('/api/posts')
+      if (!postsResponse.ok) {
+        throw new Error(`Failed to fetch posts: ${postsResponse.statusText}`)
+      }
+      
+      const postsData = await postsResponse.json()
+      
+      // Prepare posts with content but without tags initially
+      const initialPosts = postsData.map((post: any) => ({
+        id: post.id,
+        content: post.text || 'No content available',
+        tags: [] // Will be populated later
+      }))
+      
+      // Create a map to store all unique tags
+      const uniqueTags = new Map<string, Tag>()
+      
+      // Fetch tags for each post
+      for (const post of initialPosts) {
+        try {
+          const tagsResponse = await fetch(`/api/posts/${post.id}/tags`)
+          if (tagsResponse.ok) {
+            const data = await tagsResponse.json()
+            const tagsList = data.tags || []
+            
+            // Create tag objects
+            post.tags = tagsList.map((tagName: string) => {
+              const tagObj = { id: tagName, name: tagName }
+              uniqueTags.set(tagName, tagObj)
+              return tagObj
+            })
+          }
+        } catch (err) {
+          console.error(`Error fetching tags for post ${post.id}:`, err)
+          // Keep empty tags array for this post
+        }
+      }
+      
+      // Update state
+      setTags(Array.from(uniqueTags.values()))
+      setPosts(initialPosts)
     } catch (err) {
       setError("Failed to load feed data. Please try again later.")
       console.error("Error fetching feed data:", err)
