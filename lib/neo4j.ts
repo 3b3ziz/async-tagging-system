@@ -1,98 +1,126 @@
-import neo4j, { Driver, type Session } from 'neo4j-driver';
+import neo4j, { Driver, ManagedTransaction } from 'neo4j-driver';
 import 'dotenv/config';
+
+// Simple logger fallback
+const logger = {
+  info: console.log,
+  warn: console.warn,
+  error: console.error,
+};
 
 let driver: Driver | null = null;
 
-const NEO4J_URI = process.env.NEO4J_URI;
-const NEO4J_USERNAME = process.env.NEO4J_USERNAME;
-const NEO4J_PASSWORD = process.env.NEO4J_PASSWORD;
-const NEO4J_DATABASE = process.env.NEO4J_DATABASE || 'neo4j'; // Default to 'neo4j' if not set
+// Export initializeNeo4j
+export function initializeNeo4j(): Driver {
+  if (driver) {
+    return driver;
+  }
+  const neo4jUrl = process.env.NEO4J_URL || 'neo4j://localhost:7687';
+  const neo4jUser = process.env.NEO4J_USER || 'neo4j';
+  const neo4jPassword = process.env.NEO4J_PASSWORD || 'password';
+  const neo4jDatabase = process.env.NEO4J_DATABASE || 'neo4j';
 
-if (!NEO4J_URI || !NEO4J_USERNAME || !NEO4J_PASSWORD) {
-  console.warn('Neo4j environment variables (NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD) are not fully set. Neo4j client will not be initialized.');
+  logger.info(`Initializing Neo4j driver for URI: ${neo4jUrl} and database: ${neo4jDatabase}`);
+  driver = neo4j.driver(
+    neo4jUrl,
+    neo4j.auth.basic(neo4jUser, neo4jPassword)
+  );
+
+  // Verify connection (optional but recommended)
+  driver.verifyConnectivity({ database: neo4jDatabase })
+    .then(() => {
+      logger.info('Neo4j driver connected successfully.');
+    })
+    .catch((error) => {
+      logger.error('Neo4j driver connection failed:', error);
+      // Optionally handle error more gracefully, e.g., throw or exit
+    });
+
+  return driver;
 }
 
 export function getNeo4jDriver(): Driver {
   if (!driver) {
-    if (!NEO4J_URI || !NEO4J_USERNAME || !NEO4J_PASSWORD) {
-      throw new Error('Cannot create Neo4j driver: Environment variables are missing.');
-    }
-    try {
-      console.log(`Initializing Neo4j driver for URI: ${NEO4J_URI} and database: ${NEO4J_DATABASE}`);
-      driver = neo4j.driver(
-        NEO4J_URI,
-        neo4j.auth.basic(NEO4J_USERNAME, NEO4J_PASSWORD)
-      );
-      // Verify connectivity during initialization
-      driver.verifyConnectivity({ database: NEO4J_DATABASE })
-        .then(() => console.log('Neo4j driver connected successfully.'))
-        .catch(error => {
-          console.error('Neo4j driver failed to connect:', error);
-          // Optional: throw error here or handle reconnection
-          driver = null; // Reset driver if connection failed
-          throw new Error(`Neo4j connection verification failed: ${error.message}`);
-        });
-    } catch (error: any) {
-      console.error('Failed to initialize Neo4j driver:', error);
-      throw new Error(`Neo4j driver initialization failed: ${error.message}`);
-    }
+    throw new Error('Neo4j driver has not been initialized. Call initializeNeo4j first.');
   }
   return driver;
 }
 
 export async function closeNeo4jDriver(): Promise<void> {
   if (driver) {
-    console.log('Closing Neo4j driver...');
-    try {
-      await driver.close();
-      driver = null;
-      console.log('Neo4j driver closed successfully.');
-    } catch (error) {
-      console.error('Error closing Neo4j driver:', error);
-    }
+    logger.info('Closing Neo4j driver...');
+    await driver.close();
+    driver = null; // Reset driver instance
+    logger.info('Neo4j driver closed successfully.');
   }
 }
 
-/**
- * Creates or merges a Post node and links it to Tag nodes in Neo4j.
- * @param driver The Neo4j driver instance.
- * @param postId The ID of the post.
- * @param postText The text content of the post (optional, for context if needed).
- * @param tags An array of tag strings.
- */
-export async function linkPostToTags(
-  driver: Driver,
-  postId: number | string, // Allow string or number for flexibility
-  postText: string, // Keep text for potential future use (e.g., updating Post properties)
-  tags: string[]
-): Promise<void> {
-  const session: Session = driver.session({ database: NEO4J_DATABASE });
-  console.log(`[Neo4j] Linking post ID ${postId} to tags: ${tags.join(', ')}`);
+// Updated signature: only postId and tags
+export async function linkPostToTags(postId: string, tags: string[]): Promise<void> {
+  const currentDriver = getNeo4jDriver();
+  const session = currentDriver.session({ database: process.env.NEO4J_DATABASE || 'neo4j' });
+  logger.info(`[Neo4j] Linking post ID ${postId} to tags: ${tags.join(', ')}`);
+
   try {
-    // Use executeWrite for automatic transaction management and retries
-    await session.executeWrite(tx =>
-      tx.run(
-        `
-        MERGE (p:Post {id: $postId})
-        ON CREATE SET p.text = $postText // Optionally set text on create
-        ON MATCH SET p.text = $postText // Optionally update text on match
-        WITH p
-        UNWIND $tags AS tagName
-          MERGE (t:Tag {name: tagName})
-          MERGE (p)-[:HAS_TAG]->(t)
-        `,
-        {
-          postId: typeof postId === 'string' ? parseInt(postId, 10) : postId, // Ensure ID is number if needed by schema
-          postText: postText,
-          tags: tags,
-        }
-      )
-    );
-    console.log(`[Neo4j] Successfully linked post ID ${postId} to tags.`);
+    await session.executeWrite(async (tx: ManagedTransaction) => {
+      // 1. Ensure the Post node exists (or create it)
+      await tx.run(
+        'MERGE (p:Post {id: $postId}) ON CREATE SET p.text = null', // Set text to null initially or fetch if needed
+        { postId }
+      );
+
+      // 2. For each tag, ensure the Tag node exists and create the relationship
+      for (const tagName of tags) {
+        await tx.run(
+          `MERGE (t:Tag {name: $tagName})
+           WITH t
+           MATCH (p:Post {id: $postId})
+           MERGE (p)-[:HAS_TAG]->(t)`,
+          { tagName, postId }
+        );
+      }
+    });
+    logger.info(`[Neo4j] Successfully linked post ID ${postId} to tags.`);
   } catch (error) {
-    console.error(`[Neo4j] Error linking post ID ${postId} to tags:`, error);
-    // Rethrow or handle error as appropriate for the application
-    throw error;
+    logger.error(`[Neo4j] Error linking post ${postId} to tags:`, error);
+    throw error; // Re-throw the error to be handled by the consumer
+  } finally {
+    await session.close();
+  }
+}
+
+// Export storeInteraction
+export async function storeInteraction(userId: string, postId: string, interactionType: string): Promise<void> {
+  const currentDriver = getNeo4jDriver();
+  const session = currentDriver.session({ database: process.env.NEO4J_DATABASE || 'neo4j' });
+  const context = `User ${userId} ${interactionType} Post ${postId}`;
+  logger.info(`[Neo4j] Storing interaction: ${context}`);
+
+  try {
+    await session.executeWrite(async (tx: ManagedTransaction) => {
+      // Ensure User and Post nodes exist before creating the relationship
+      await tx.run(
+        'MERGE (u:User {id: $userId})', { userId }
+      );
+      await tx.run(
+        'MERGE (p:Post {id: $postId})', { postId }
+      );
+      // Create the interaction relationship
+      await tx.run(
+        `
+        MATCH (u:User {id: $userId})
+        MATCH (p:Post {id: $postId})
+        MERGE (u)-[r:INTERACTED {type: $interactionType}]->(p)
+        ON CREATE SET r.timestamp = datetime()
+        RETURN r
+        `,
+        { userId, postId, interactionType }
+      );
+    });
+    logger.info(`[Neo4j] Successfully stored interaction: ${context}`);
+  } catch (error) {
+    logger.error(`[Neo4j] Error storing interaction (${context}):`, error);
+    throw error; // Re-throw the error
   } finally {
     await session.close();
   }

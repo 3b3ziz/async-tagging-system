@@ -1,9 +1,16 @@
-import * as amqp from 'amqplib';
-import { Channel, ChannelModel } from 'amqplib';
+import amqplib, { Channel, ChannelModel } from 'amqplib';
+// import { logger } from '../lib/logger'; // Commented out for now
 import 'dotenv/config';
+import { EXCHANGE } from '../lib/rabbitmqConfig';
+
+// Simple logger fallback
+const logger = {
+  info: console.log,
+  warn: console.warn,
+  error: console.error,
+};
 
 let connection: ChannelModel | null = null;
-let channel: Channel | null = null;
 
 const RABBITMQ_URL = process.env.RABBITMQ_URL;
 
@@ -11,100 +18,86 @@ if (!RABBITMQ_URL) {
   throw new Error('RABBITMQ_URL environment variable is not set.');
 }
 
-async function establishConnection(): Promise<ChannelModel> {
-  if (connection) return connection;
-
-  console.log(`Attempting to connect to RabbitMQ at ${RABBITMQ_URL}...`);
+// Simpler connection function (no retry)
+async function connectRabbitMQ(): Promise<ChannelModel> {
+  logger.info(`Attempting to connect to RabbitMQ at ${RABBITMQ_URL}...`);
   try {
-    const newConnection = await amqp.connect(RABBITMQ_URL as string);
-    console.log('RabbitMQ connected successfully.');
+    // Assert RABBITMQ_URL as string since we checked it's defined
+    const conn = await amqplib.connect(RABBITMQ_URL as string);
+    logger.info('RabbitMQ connected successfully.');
 
-    newConnection.on('error', (err: Error) => {
-      console.error('RabbitMQ connection error:', err.message);
-      connection = null;
-      channel = null;
+    conn.on('error', (err: Error) => {
+      logger.error('RabbitMQ connection error:', err);
+      connection = null; // Reset connection on error
     });
-
-    newConnection.on('close', () => {
-      console.log('RabbitMQ connection closed.');
-      connection = null;
-      channel = null;
+    conn.on('close', () => {
+      logger.warn('RabbitMQ connection closed.');
+      connection = null; // Reset connection on close
     });
-
-    connection = newConnection;
-    return connection;
-  } catch (error) {
-    console.error('Failed to establish RabbitMQ connection:', error);
-    throw error;
+    return conn;
+  } catch (err) {
+    logger.error('Failed to establish RabbitMQ connection:', err);
+    throw err; // Rethrow error
   }
 }
 
-async function establishChannel(): Promise<Channel> {
-  if (channel) return channel;
+// Get existing connection or establish a new one
+export async function getRabbitMQConnection(): Promise<ChannelModel> {
+  if (!connection) {
+    connection = await connectRabbitMQ();
+  }
+  return connection;
+}
 
-  const currentConnection = await establishConnection();
-  console.log('Attempting to create RabbitMQ channel...');
-  
+// Creates and returns a NEW Channel from the connection
+export async function createRabbitMQChannel(): Promise<Channel> {
+  const conn = await getRabbitMQConnection(); // Gets ChannelModel
   try {
-    const newChannel = await currentConnection.createChannel();
-    console.log('RabbitMQ channel created successfully.');
+    logger.info('Attempting to create RabbitMQ channel...');
+    const ch = await conn.createChannel(); // ChannelModel has createChannel()
+    logger.info('RabbitMQ channel created successfully.');
 
-    newChannel.on('error', (err: Error) => {
-      console.error('RabbitMQ channel error:', err.message);
-      channel = null;
+    // Assert the exchange using centralized configuration
+    await ch.assertExchange(EXCHANGE.NAME, EXCHANGE.TYPE, EXCHANGE.OPTIONS);
+    logger.info(`Exchange '${EXCHANGE.NAME}' asserted.`);
+
+    ch.on('error', (err: Error) => {
+      logger.error('RabbitMQ channel error:', err);
+      // Basic error logging for now
+    });
+    ch.on('close', () => {
+      logger.warn('RabbitMQ channel closed.');
+      // Basic close logging for now
     });
 
-    newChannel.on('close', () => {
-      console.log('RabbitMQ channel closed.');
-      channel = null;
-    });
-
-    channel = newChannel;
-
-    const exchangeName = 'app_events';
-    await newChannel.assertExchange(exchangeName, 'topic', { durable: true });
-    console.log(`Exchange '${exchangeName}' asserted.`);
-
-    return newChannel;
-  } catch (error) {
-    console.error('Failed to create RabbitMQ channel:', error);
-    throw error;
+    return ch;
+  } catch (err) {
+    logger.error('Failed to create RabbitMQ channel:', err);
+    throw err;
   }
 }
 
-export async function getRabbitMQChannel(): Promise<Channel> {
-  return await establishChannel();
-}
-
+// Closes the main connection
 export async function closeRabbitMQ(): Promise<void> {
-  console.log('Closing RabbitMQ resources...');
-  if (channel) {
-    try {
-      await channel.close();
-      console.log('RabbitMQ channel closed successfully.');
-    } catch (err) {
-      console.error('Error closing RabbitMQ channel:', err);
-    } finally {
-      channel = null;
-    }
-  }
-
   if (connection) {
     try {
-      await connection.close();
-      console.log('RabbitMQ connection closed successfully.');
-    } catch (err) {
-      console.error('Error closing RabbitMQ connection:', err);
-    } finally {
+      logger.info('Closing RabbitMQ connection...');
+      await connection.close(); // ChannelModel has close()
       connection = null;
+      logger.info('RabbitMQ connection closed successfully.');
+    } catch (err) {
+      logger.error('Error closing RabbitMQ connection:', err);
     }
+  } else {
+    logger.info('RabbitMQ connection already closed or not initialized.');
   }
 }
 
+// Graceful shutdown handling (kept simple)
 async function shutdown(signal: string): Promise<void> {
-  console.log(`${signal} received. Shutting down gracefully...`);
+  logger.warn(`${signal} received. Shutting down RabbitMQ client...`);
   await closeRabbitMQ();
-  process.exit(0);
+  // process.exit(0); // Let the main application control exit
 }
 
 process.on('SIGINT', () => shutdown('SIGINT'));

@@ -1,28 +1,37 @@
 // jobs/startConsumers.ts
 import 'dotenv/config'; // Ensure environment variables are loaded first
 
-import { closeRabbitMQ } from './rabbitmqClient'; // Import only closeRabbitMQ for shutdown handling
+import { closeRabbitMQ, createRabbitMQChannel } from './rabbitmqClient'; // Import createRabbitMQChannel
 import { closeNeo4jDriver } from '../lib/neo4j'; // Import Neo4j close function
-import { startPostCreatedConsumer } from './consumers/postCreatedConsumer';
-import { startPostInteractedConsumer } from './consumers/postInteractedConsumer';
+import { initializePostCreatedConsumer } from './consumers/postCreatedConsumer';
+import { initializePostInteractedConsumer } from './consumers/postInteractedConsumer';
+import { initializeNeo4j } from '../lib/neo4j';
+// import { logger } from '../lib/logger'; // Assuming logger exists
 
 let isShuttingDown = false;
+
+// Simple logger fallback
+const logger = {
+  info: console.log,
+  warn: console.warn,
+  error: console.error,
+};
 
 // Centralized shutdown function
 async function shutdown(signal: string) {
   if (isShuttingDown) return;
   isShuttingDown = true;
-  console.log(`[Main] ${signal} received. Shutting down gracefully...`);
+  logger.info(`[Main] ${signal} received. Shutting down gracefully...`);
   try {
     // Close connections concurrently
     await Promise.all([
       closeRabbitMQ(),
       closeNeo4jDriver()
     ]);
-    console.log('[Main] All connections closed.');
-    process.exit(0);
+    logger.info('[Main] All connections closed.');
+    process.exit(signal === 'ERROR' ? 1 : 0);
   } catch (error) {
-    console.error('[Main] Error during shutdown:', error);
+    logger.error('[Main] Error during shutdown:', error);
     process.exit(1);
   }
 }
@@ -31,25 +40,34 @@ async function shutdown(signal: string) {
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 
-async function main() {
-  console.log('[Main] Starting consumer services...');
+async function start() {
+  logger.info('[Main] Starting consumer services...');
 
   try {
-    // Start consumers concurrently
-    await Promise.all([
-      startPostCreatedConsumer(),
-      startPostInteractedConsumer()
-    ]);
+    // Initialize Neo4j first (or concurrently if safe)
+    await initializeNeo4j();
 
-    console.log('[Main] All consumers started successfully. Waiting for messages...');
+    // Create separate channels for each consumer
+    logger.info('[Main] Creating RabbitMQ channel for PostCreatedConsumer...');
+    const postCreatedChannel = await createRabbitMQChannel();
+    logger.info('[Main] RabbitMQ channel for PostCreatedConsumer created.');
 
-    // Note: Removed explicit keep-alive logic as process listeners handle shutdown.
+    logger.info('[Main] Creating RabbitMQ channel for PostInteractedConsumer...');
+    const postInteractedChannel = await createRabbitMQChannel();
+    logger.info('[Main] RabbitMQ channel for PostInteractedConsumer created.');
+
+    // Initialize consumers with their dedicated channels
+    await initializePostCreatedConsumer(postCreatedChannel);
+    await initializePostInteractedConsumer(postInteractedChannel);
+
+    logger.info('[Main] All consumers started successfully. Waiting for messages...');
 
   } catch (error) {
-    console.error('[Main] Failed to start consumers:', error);
-    // Attempt to close connections on startup failure
-    await shutdown('STARTUP_ERROR'); // Use shutdown function for cleanup
+    logger.error('[Main] Failed to start consumer services:', error);
+    // Attempt cleanup even on startup failure
+    await shutdown('ERROR');
+    process.exit(1); // Exit with error code
   }
 }
 
-main(); 
+start(); // Run the startup function 

@@ -1,71 +1,77 @@
-import type { ConsumeMessage } from 'amqplib';
-import { getRabbitMQChannel } from '../rabbitmqClient';
+import { Channel, ConsumeMessage } from 'amqplib';
+import { createRabbitMQChannel } from '../rabbitmqClient';
 import { getTagsFromOpenAI } from '../../lib/openai';
-import { getNeo4jDriver, linkPostToTags } from '../../lib/neo4j';
-import { validatePostCreatedMessage } from '../../lib/messageSchemas';
+import { linkPostToTags } from '../../lib/neo4j';
+import { validatePostCreatedMessage, PostCreatedMessage } from '../../lib/messageSchemas';
+import { EXCHANGE, QUEUES, CONSUMER_OPTIONS } from '../../lib/rabbitmqConfig';
 
-const QUEUE_NAME = 'post_created_queue';
-const EXCHANGE_NAME = 'app_events';
-const ROUTING_KEY = 'post.created';
+// Simple logger fallback
+const logger = {
+	info: console.log,
+	warn: console.warn,
+	error: console.error,
+};
 
-async function handlePostCreated(msg: ConsumeMessage | null) {
-	if (!msg) {
-		console.warn('[post.created] Received null message, skipping.');
-		return;
-	}
+// Access the configuration from the centralized config
+const { NAME: QUEUE_NAME, ROUTING_KEY, OPTIONS: QUEUE_OPTIONS, PREFETCH } = QUEUES.POST_CREATED;
+const EXCHANGE_NAME = EXCHANGE.NAME;
 
-	const channel = await getRabbitMQChannel();
-	const content = msg.content.toString();
-	console.log('[post.created] Received message');
+// Accept channel as an argument
+export async function initializePostCreatedConsumer(channel: Channel): Promise<void> {
+	logger.info(`[Consumer][post.created] Asserting queue: ${QUEUE_NAME}`);
+	await channel.assertQueue(QUEUE_NAME, QUEUE_OPTIONS);
+	logger.info(`[Consumer][post.created] Binding queue ${QUEUE_NAME} to exchange ${EXCHANGE_NAME} with key ${ROUTING_KEY}`);
+	await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, ROUTING_KEY);
 
+	// Set prefetch count for this consumer's channel
+	await channel.prefetch(PREFETCH);
+
+	logger.info(`[Consumer][post.created] Waiting for messages in ${QUEUE_NAME}. To exit press CTRL+C`);
+
+	channel.consume(QUEUE_NAME, async (msg: ConsumeMessage | null) => {
+		if (msg) {
+			// Pass channel to handler
+			await handlePostCreated(msg, channel);
+		}
+	}, CONSUMER_OPTIONS.DEFAULT); // Use shared consumer options
+
+	logger.info('[Consumer][post.created] Consumer started successfully.');
+}
+
+// Accept channel as an argument
+async function handlePostCreated(msg: ConsumeMessage, channel: Channel): Promise<void> {
+	let postData: PostCreatedMessage | null | undefined = null;
 	try {
-		// 1. Validate message structure
-		const messageData = validatePostCreatedMessage(content);
-		if (!messageData) {
-			console.error('[post.created] Invalid message format');
+		const contentString = msg.content.toString();
+		postData = validatePostCreatedMessage(contentString);
+
+		if (!postData) {
+			logger.error('[post.created] Invalid message format or validation failed.');
 			channel.nack(msg, false, false);
 			return;
 		}
 
-		// 2. Generate tags using OpenAI
-		console.log('[post.created] Generating tags for:', messageData.text.substring(0, 50) + '...');
-		const tags = await getTagsFromOpenAI(messageData.text);
-		console.log('[post.created] Generated tags:', tags);
+		const postTextPreview = postData.text.substring(0, 50) + '...';
+		logger.info(`[post.created] Generating tags for: ${postTextPreview}`);
 
-		// 3. Store post and tags in Neo4j
-		const driver = getNeo4jDriver();
-		await linkPostToTags(driver, messageData.postId, messageData.text, tags);
+		const tags = await getTagsFromOpenAI(postData.text);
+		logger.info(`[post.created] Generated tags: [ ${tags.join(', ')} ]`);
 
-		// 4. Acknowledge the message
+		if (tags.length > 0) {
+			await linkPostToTags(postData.postId, tags);
+		}
+
 		channel.ack(msg);
-		console.log(`[post.created] Successfully processed message for post ID: ${messageData.postId}`);
-	} catch (error) {
-		console.error('[post.created] Error processing message:', error);
-		// Nack the message, but don't requeue
+		logger.info(`[post.created] Successfully processed message for post ID: ${postData.postId}`);
+
+	} catch (error: any) {
+		const postId = postData?.postId || JSON.parse(msg.content.toString())?.postId || 'unknown';
+		logger.error(`[post.created] Error processing message for post ID ${postId}:`, error);
 		try {
 			channel.nack(msg, false, false);
-		} catch (nackError) {
-			console.error('[post.created] Error nacking message:', nackError);
+			logger.warn(`[post.created] Message nacked for post ID ${postId} due to error.`);
+		} catch (nackError: any) {
+			logger.error(`[post.created] Error nacking message for post ID ${postId}:`, nackError);
 		}
-	}
-}
-
-export async function startPostCreatedConsumer() {
-	try {
-		const channel = await getRabbitMQChannel();
-		console.log(`[Consumer][post.created] Asserting queue: ${QUEUE_NAME}`);
-		await channel.assertQueue(QUEUE_NAME, { durable: true });
-		console.log(`[Consumer][post.created] Binding queue ${QUEUE_NAME} to exchange ${EXCHANGE_NAME} with key ${ROUTING_KEY}`);
-		await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, ROUTING_KEY);
-		await channel.prefetch(1);
-		console.log(`[Consumer][post.created] Waiting for messages in ${QUEUE_NAME}. To exit press CTRL+C`);
-
-		channel.consume(QUEUE_NAME,
-			(msg) => handlePostCreated(msg),
-			{ noAck: false }
-		);
-	} catch (error) {
-		console.error('[Consumer][post.created] Error starting consumer:', error);
-		process.exit(1);
 	}
 } 

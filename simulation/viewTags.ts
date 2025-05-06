@@ -1,7 +1,15 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { Driver, auth, driver as createDriver, Record } from 'neo4j-driver';
+import { Driver, Record } from 'neo4j-driver';
+import { initializeNeo4j, closeNeo4jDriver } from '../lib/neo4j';
 import 'dotenv/config';
+
+// Simple logger fallback
+const logger = {
+  info: console.log,
+  warn: console.warn,
+  error: console.error,
+};
 
 // Load mock data for posts
 function loadMockPosts() {
@@ -11,23 +19,9 @@ function loadMockPosts() {
     const data = JSON.parse(rawData);
     return data.posts;
   } catch (error) {
-    console.error('Failed to load mock data:', error);
+    logger.error('Failed to load mock data:', error);
     throw error;
   }
-}
-
-// Initialize Neo4j driver
-function initNeo4j(): Driver {
-  const neo4jUrl = process.env.NEO4J_URL || 'neo4j://localhost:7687';
-  const neo4jUser = process.env.NEO4J_USER || 'neo4j';
-  const neo4jPassword = process.env.NEO4J_PASSWORD || 'password';
-  const neo4jDatabase = process.env.NEO4J_DATABASE || 'neo4j';
-
-  console.log(`Initializing Neo4j driver for URI: ${neo4jUrl} and database: ${neo4jDatabase}`);
-  return createDriver(
-    neo4jUrl,
-    auth.basic(neo4jUser, neo4jPassword)
-  );
 }
 
 // Get tags for post
@@ -41,7 +35,7 @@ async function getTagsForPost(driver: Driver, postId: string): Promise<string[]>
     );
     return result.records.map((record: Record) => record.get('tag'));
   } catch (error) {
-    console.error(`Error fetching tags for post ${postId}:`, error);
+    logger.error(`Error fetching tags for post ${postId}:`, error);
     return [];
   } finally {
     await session.close();
@@ -50,34 +44,37 @@ async function getTagsForPost(driver: Driver, postId: string): Promise<string[]>
 
 async function main() {
   const posts = loadMockPosts();
-  const driver = initNeo4j();
   
-  console.log('-------------------------');
-  console.log('POSTS WITH THEIR TAGS:');
-  console.log('-------------------------');
+  // Use the shared Neo4j initialization
+  const driver = initializeNeo4j();
+  
+  logger.info('-------------------------');
+  logger.info('POSTS WITH THEIR TAGS:');
+  logger.info('-------------------------');
   
   try {
     for (const post of posts) {
       const tags = await getTagsForPost(driver, post.id);
       
-      console.log(`\nPost ID: ${post.id}`);
-      console.log(`User: ${post.userId}`);
-      console.log(`Text: ${post.text}`);
+      logger.info(`\nPost ID: ${post.id}`);
+      logger.info(`User: ${post.userId}`);
+      logger.info(`Text: ${post.text}`);
       
       if (tags.length > 0) {
-        console.log(`Tags: ${tags.join(', ')}`);
+        logger.info(`Tags: ${tags.join(', ')}`);
       } else {
-        console.log('Tags: None found');
+        logger.info('Tags: None found');
       }
-      console.log('-------------------------');
+      logger.info('-------------------------');
     }
   } finally {
-    await driver.close();
-    console.log('Neo4j driver closed.');
+    // Use the shared closeNeo4jDriver function
+    await closeNeo4jDriver();
+    logger.info('Neo4j driver closed.');
   }
 }
 
 main().catch(error => {
-  console.error('Error in viewTags script:', error);
+  logger.error('Error in viewTags script:', error);
   process.exit(1);
 }); 

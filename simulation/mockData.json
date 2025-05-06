@@ -3,7 +3,7 @@
     {
       "id": "101",
       "userId": "user-1",
-      "text": "Exploring RabbitMQ for async communication! #rabbitmq #nodejs",
+      "text": "Exploring RabbitMQ for async communication!",
       "createdAt": "2025-05-04T22:21:26.562Z",
       "metadata": {
         "language": "en",
@@ -13,7 +13,7 @@
     {
       "id": "102",
       "userId": "user-2",
-      "text": "Neo4j graph databases are powerful for connected data. #neo4j #graphdb",
+      "text": "Neo4j graph databases are powerful for modeling connected data structures.",
       "createdAt": "2025-05-04T22:21:26.562Z",
       "metadata": {
         "language": "en",
@@ -23,7 +23,7 @@
     {
       "id": "103",
       "userId": "user-1",
-      "text": "TypeScript + Node = faster iteration than Java, especially for smaller teams.",
+      "text": "Comparing TypeScript/Node.js with Java for backend development efficiency.",
       "createdAt": "2025-05-04T22:21:26.562Z",
       "metadata": {
         "language": "en",
@@ -33,8 +33,48 @@
     {
       "id": "104",
       "userId": "user-2",
-      "text": "OpenAI for NLP tasks like tag extraction? Easy integration.",
+      "text": "Using large language models via the OpenAI API for natural language processing tasks simplifies integration.",
       "createdAt": "2025-05-04T22:21:26.562Z",
+      "metadata": {
+        "language": "en",
+        "source": "mobile"
+      }
+    },
+    {
+      "id": "105",
+      "userId": "user-3",
+      "text": "Building event-driven architectures often involves message queues for decoupling services.",
+      "createdAt": "2025-05-05T10:15:00.000Z",
+      "metadata": {
+        "language": "en",
+        "source": "web"
+      }
+    },
+    {
+      "id": "106",
+      "userId": "user-1",
+      "text": "How does knowledge representation in graph databases compare to traditional relational models?",
+      "createdAt": "2025-05-05T11:30:00.000Z",
+      "metadata": {
+        "language": "en",
+        "source": "api"
+      }
+    },
+    {
+      "id": "107",
+      "userId": "user-2",
+      "text": "Considering migrating our monolith application to microservices using Node.js. Any advice on inter-service communication patterns?",
+      "createdAt": "2025-05-06T08:00:00.000Z",
+      "metadata": {
+        "language": "en",
+        "source": "web"
+      }
+    },
+    {
+      "id": "108",
+      "userId": "user-3",
+      "text": "The latest advancements in AI allow for sophisticated analysis of unstructured text data.",
+      "createdAt": "2025-05-06T09:45:00.000Z",
       "metadata": {
         "language": "en",
         "source": "mobile"

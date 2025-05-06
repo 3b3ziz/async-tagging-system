@@ -3,14 +3,13 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "test:connections": "tsx scripts/test-connections.ts",
     "test:cycle": "bash scripts/run-test-cycle.sh",
     "start:consumers": "tsx jobs/startConsumers.ts",
     "sim:graph:reset": "tsx simulation/graph/reset.ts",
     "sim:publish": "tsx simulation/mockPublisher.ts",
     "sim:view-tags": "tsx simulation/viewTags.ts",
     "viewer": "cd viewer && npm start",
-    "viewer:server": "node viewer/server.js",
+    "viewer:server": "tsx viewer/server.ts",
     "viewer:graph": "echo 'Starting viewer server and app in graph mode...' && (npm run viewer:server & cd viewer && REACT_APP_INITIAL_TAB=graph npm start)"
   },
   "private": true,
@@ -27,6 +26,9 @@
     "zod": "^3.24.3"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.5",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
     "@types/jest": "^29.5.12",
     "@types/node": "18.16.9",
     "eslint": "^9.8.0",

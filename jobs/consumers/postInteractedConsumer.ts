@@ -1,106 +1,77 @@
 import { Channel, ConsumeMessage } from 'amqplib';
-import { getRabbitMQChannel } from '../rabbitmqClient';
-import { getNeo4jDriver } from '../../lib/neo4j';
-import { validatePostInteractedMessage, type PostInteractedMessage } from '../../lib/messageSchemas';
+import { validatePostInteractedMessage, PostInteractedMessage } from '../../lib/messageSchemas';
+import { storeInteraction } from '../../lib/neo4j';
+import { EXCHANGE, QUEUES, CONSUMER_OPTIONS } from '../../lib/rabbitmqConfig';
+// import { logger } from '../../lib/logger';
 
-const QUEUE_NAME = 'post_interacted_queue';
-const EXCHANGE_NAME = 'app_events';
-const ROUTING_KEY = 'post.interacted';
+// Simple logger fallback
+const logger = {
+  info: console.log,
+  warn: console.warn,
+  error: console.error,
+};
 
-async function handlePostInteracted(msg: ConsumeMessage | null) {
-  if (!msg) {
-    console.warn('[Consumer][post.interacted] Received null message');
-    return;
-  }
+// Access the configuration from the centralized config
+const { NAME: QUEUE_NAME, ROUTING_KEY, OPTIONS: QUEUE_OPTIONS, PREFETCH } = QUEUES.POST_INTERACTED;
+const EXCHANGE_NAME = EXCHANGE.NAME;
 
-  const channel = await getRabbitMQChannel();
-  let messageData: PostInteractedMessage | null | undefined;
-  const driver = getNeo4jDriver();
+// Accept channel as an argument
+export async function initializePostInteractedConsumer(channel: Channel): Promise<void> {
+  await channel.assertQueue(QUEUE_NAME, QUEUE_OPTIONS);
+  await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, ROUTING_KEY);
 
-  try {
-    const messageContentString = msg.content.toString();
-    
-    // Validate message structure using Zod schema, passing the raw string
-    messageData = validatePostInteractedMessage(messageContentString);
+  // Set prefetch count for this consumer's channel
+  await channel.prefetch(PREFETCH);
 
-    // Check if validation failed (returned null)
-    if (!messageData) {
-      console.error(`[Consumer][post.interacted] Message validation failed. Nacking message.`);
-      channel.nack(msg, false, false); // Nack invalid message
-      return; // Stop processing if invalid
+  logger.info(`[Consumer][post.interacted] Queue '${QUEUE_NAME}' asserted and bound to '${EXCHANGE_NAME}' with key '${ROUTING_KEY}'. Waiting for messages...`);
+
+  channel.consume(QUEUE_NAME, async (msg) => {
+    if (msg) {
+      // Pass channel to handler
+      await handlePostInteracted(msg, channel);
     }
+  }, CONSUMER_OPTIONS.DEFAULT); // Use shared consumer options
 
-    // Define context string here, accessible in subsequent blocks
-    const context = `User ${messageData.userId} ${messageData.interactionType} Post ${messageData.postId}`;
-
-    // Destructure AFTER validation confirms messageData is not null
-    const { postId, userId, interactionType } = messageData;
-
-    console.log(`[Consumer][post.interacted] Processing event: ${context}`);
-
-    // Store interaction in Neo4j using shared driver
-    const session = driver.session({ database: process.env.NEO4J_DATABASE || 'neo4j' });
-    try {
-      await session.executeWrite(tx => {
-        return tx.run(
-          `
-          MATCH (u:User {id: $userId})
-          MATCH (p:Post {id: $postId})
-          MERGE (u)-[r:INTERACTED {type: $interactionType}]->(p)
-          ON CREATE SET r.timestamp = datetime()
-          RETURN u.id, p.id, r.type
-          `,
-          { userId: Number(userId), postId: Number(postId), interactionType }
-        );
-      });
-      console.log(`[Consumer][post.interacted] Stored interaction: User ${userId} ${interactionType} Post ${postId}`);
-    } finally {
-      await session.close();
-    }
-
-    // Defensively try to ack the message
-    try {
-        channel.ack(msg);
-        console.log(`[Consumer][post.interacted] Acknowledged message for interaction: ${context}`);
-    } catch (ackError: any) {
-        console.error(`[Consumer][post.interacted] Failed to ACK message after processing (${context}):`, ackError.message);
-    }
-
-  } catch (error: any) {
-    // Context defined above is not directly accessible here, 
-    // but messageData (which might be null/undefined) is.
-    // We need to reconstruct context or use messageData safely.
-    const errorContext = messageData 
-      ? `User ${messageData.userId} ${messageData.interactionType} Post ${messageData.postId}` 
-      : '(unknown - validation failed or error before context definition)';
-    console.error(`[Consumer][post.interacted] Error processing message (${errorContext}):`, error.message);
-    console.error('Error details:', error);
-    try {
-        channel.nack(msg, false, false);
-        console.log(`[Consumer][post.interacted] Rejected interaction message (${errorContext})`);
-    } catch (nackError: any) {
-        console.error(`[Consumer][post.interacted] Failed to NACK message after error (${errorContext}):`, nackError.message);
-    }
-  }
+  logger.info('[Consumer][post.interacted] Consumer started successfully.');
 }
 
-export async function startPostInteractedConsumer() {
+// Accept channel as an argument
+async function handlePostInteracted(msg: ConsumeMessage, channel: Channel): Promise<void> {
+  let interactionData: PostInteractedMessage | null | undefined = null; // Initialize as null
   try {
-    const channel = await getRabbitMQChannel();
+    const contentString = msg.content.toString();
+    // Adjust validation handling: assume it returns data or null/throws
+    interactionData = validatePostInteractedMessage(contentString);
 
-    await channel.assertQueue(QUEUE_NAME, {
-        durable: true,
-    });
-    await channel.bindQueue(QUEUE_NAME, EXCHANGE_NAME, ROUTING_KEY);
-    console.log(`[Consumer][post.interacted] Queue '${QUEUE_NAME}' asserted and bound to '${EXCHANGE_NAME}' with key '${ROUTING_KEY}'. Waiting for messages...`);
+    if (!interactionData) { // Check if validation returned null/undefined
+      logger.error('[post.interacted] Invalid message format or validation failed.');
+      // Reject message and don't requeue (poison pill)
+      channel.nack(msg, false, false);
+      return;
+    }
 
-    await channel.prefetch(1);
+    // Now interactionData is guaranteed to be valid
+    logger.info(`[Consumer][post.interacted] Processing event: User ${interactionData.userId} ${interactionData.interactionType} Post ${interactionData.postId}`);
 
-    await channel.consume(QUEUE_NAME, handlePostInteracted, { noAck: false });
-    console.log('[Consumer][post.interacted] Consumer started successfully.');
+    await storeInteraction(interactionData.userId, interactionData.postId, interactionData.interactionType);
+    logger.info(`[Consumer][post.interacted] Stored interaction: User ${interactionData.userId} ${interactionData.interactionType} Post ${interactionData.postId}`);
 
-  } catch (error) {
-    console.error('[Consumer][post.interacted] Failed to start consumer:', error);
-    throw error;
+    // Acknowledge the message *using the passed-in channel*
+    channel.ack(msg);
+    logger.info(`[Consumer][post.interacted] Acknowledged message for interaction: User ${interactionData.userId} ${interactionData.interactionType} Post ${interactionData.postId}`);
+
+  } catch (error: any) {
+    // Log error context, checking if interactionData was populated before error
+    const userId = interactionData?.userId || 'unknown';
+    const postId = interactionData?.postId || 'unknown';
+    const type = interactionData?.interactionType || 'unknown';
+    logger.error(`[post.interacted] Error processing interaction message (User ${userId} ${type} Post ${postId}):`, error);
+    // Reject message and don't requeue on error
+    try {
+      channel.nack(msg, false, false);
+      logger.warn('[post.interacted] Message nacked due to error.');
+    } catch (nackError: any) {
+      logger.error('[post.interacted] Error nacking message:', nackError);
+    }
   }
 } 

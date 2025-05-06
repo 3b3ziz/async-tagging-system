@@ -1,4 +1,4 @@
-import { getNeo4jDriver, closeNeo4jDriver } from '../../lib/neo4j';
+import { getNeo4jDriver, closeNeo4jDriver, initializeNeo4j } from '../../lib/neo4j';
 import 'dotenv/config';
 
 async function resetGraphDatabase() {
@@ -6,8 +6,9 @@ async function resetGraphDatabase() {
     let driver;
 
     try {
-        // Get the driver instance (ensure environment variables are loaded)
-        driver = getNeo4jDriver();
+        // Initialize the Neo4j driver first
+        driver = initializeNeo4j();
+        console.log('Neo4j driver initialized.');
 
         console.log('Executing query: MATCH (n) DETACH DELETE n');
         const session = driver.session({ database: process.env.NEO4J_DATABASE || 'neo4j' });

@@ -60,3 +60,4 @@ simulation/drizzle/
 simulation/drizzle/meta/
 
 # Logs
+consumers.log

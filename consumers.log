@@ -3,38 +3,26 @@
 > tsx jobs/startConsumers.ts
 
 [Main] Starting consumer services...
+Initializing Neo4j driver for URI: neo4j://localhost:7687 and database: neo4j
+[Main] Creating RabbitMQ channel for PostCreatedConsumer...
 Attempting to connect to RabbitMQ at amqp://guest:guest@localhost:5672...
-Attempting to connect to RabbitMQ at amqp://guest:guest@localhost:5672...
-(node:49922) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(node:59381) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
 (Use `node --trace-deprecation ...` to show where the warning was created)
 RabbitMQ connected successfully.
 Attempting to create RabbitMQ channel...
-RabbitMQ connected successfully.
+Neo4j driver connected successfully.
+RabbitMQ channel created successfully.
+Exchange 'app_events' asserted.
+[Main] RabbitMQ channel for PostCreatedConsumer created.
+[Main] Creating RabbitMQ channel for PostInteractedConsumer...
 Attempting to create RabbitMQ channel...
 RabbitMQ channel created successfully.
-RabbitMQ channel created successfully.
 Exchange 'app_events' asserted.
-Exchange 'app_events' asserted.
+[Main] RabbitMQ channel for PostInteractedConsumer created.
 [Consumer][post.created] Asserting queue: post_created_queue
 [Consumer][post.created] Binding queue post_created_queue to exchange app_events with key post.created
-[Consumer][post.interacted] Queue 'post_interacted_queue' asserted and bound to 'app_events' with key 'post.interacted'. Waiting for messages...
 [Consumer][post.created] Waiting for messages in post_created_queue. To exit press CTRL+C
-[Consumer][post.interacted] Consumer started successfully.
-Initializing Neo4j driver for URI: neo4j://localhost:7687 and database: neo4j
-[Consumer][post.interacted] Processing event: User user-2 like Post 101
-[Main] All consumers started successfully. Waiting for messages...
-[post.created] Received message
-[validatePostCreatedMessage] Received data (type): string
-[validatePostCreatedMessage] Received data (start): {"postId":"102","userId":"user-2","text":"Neo4j graph databases are powerful for connected data. #ne
-[validatePostCreatedMessage] Parsed data type: object
-[validatePostCreatedMessage] Attempting to validate with Zod...
-[validatePostCreatedMessage] Zod validation successful.
-[post.created] Generating tags for: Neo4j graph databases are powerful for connected d...
-[OpenAI] Fetching tags for text starting with: Neo4j graph databases are powerful for connected d...
-Neo4j driver connected successfully.
-[Consumer][post.interacted] Stored interaction: User user-2 like Post 101
-[Consumer][post.interacted] Acknowledged message for interaction: User user-2 like Post 101
-[post.created] Received message
+[Consumer][post.created] Consumer started successfully.
 [validatePostCreatedMessage] Received data (type): string
 [validatePostCreatedMessage] Received data (start): {"postId":"101","userId":"user-1","text":"Exploring RabbitMQ for async communication! #rabbitmq #nod
 [validatePostCreatedMessage] Parsed data type: object
@@ -42,12 +30,134 @@ Neo4j driver connected successfully.
 [validatePostCreatedMessage] Zod validation successful.
 [post.created] Generating tags for: Exploring RabbitMQ for async communication! #rabbi...
 [OpenAI] Fetching tags for text starting with: Exploring RabbitMQ for async communication! #rabbi...
+[Consumer][post.interacted] Queue 'post_interacted_queue' asserted and bound to 'app_events' with key 'post.interacted'. Waiting for messages...
+[Consumer][post.interacted] Consumer started successfully.
+[Main] All consumers started successfully. Waiting for messages...
+[Consumer][post.interacted] Processing event: User user-2 like Post 101
+[Neo4j] Storing interaction: User user-2 like Post 101
+[Consumer][post.interacted] Processing event: User user-1 comment Post 102
+[Neo4j] Storing interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Processing event: User user-1 view Post 101
+[Neo4j] Storing interaction: User user-1 view Post 101
+[Consumer][post.interacted] Processing event: User user-2 like Post 101
+[Neo4j] Storing interaction: User user-2 like Post 101
+[Consumer][post.interacted] Processing event: User user-1 comment Post 102
+[Neo4j] Storing interaction: User user-1 comment Post 102
+[Neo4j] Successfully stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-2 like Post 101
+[Neo4j] Successfully stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Processing event: User user-1 view Post 101
+[Neo4j] Storing interaction: User user-1 view Post 101
+[Consumer][post.interacted] Processing event: User user-2 like Post 101
+[Neo4j] Storing interaction: User user-2 like Post 101
+[Neo4j] Successfully stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 view Post 101
+[Consumer][post.interacted] Processing event: User user-1 comment Post 102
+[Neo4j] Storing interaction: User user-1 comment Post 102
+[Neo4j] Successfully stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Processing event: User user-1 view Post 101
+[Neo4j] Storing interaction: User user-1 view Post 101
+[Neo4j] Successfully stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-2 like Post 101
+[Consumer][post.interacted] Processing event: User user-2 like Post 101
+[Neo4j] Storing interaction: User user-2 like Post 101
+[Neo4j] Successfully stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-2 like Post 101
+[Neo4j] Successfully stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-2 like Post 101
+[Neo4j] Successfully stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Processing event: User user-1 comment Post 102
+[Neo4j] Storing interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Processing event: User user-1 view Post 101
+[Neo4j] Storing interaction: User user-1 view Post 101
+[Consumer][post.interacted] Processing event: User user-2 like Post 101
+[Neo4j] Storing interaction: User user-2 like Post 101
+[Neo4j] Successfully stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 view Post 101
+[Consumer][post.interacted] Processing event: User user-1 comment Post 102
+[Neo4j] Storing interaction: User user-1 comment Post 102
+[Neo4j] Successfully stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 view Post 101
+[Consumer][post.interacted] Processing event: User user-1 view Post 101
+[Neo4j] Storing interaction: User user-1 view Post 101
+[Neo4j] Successfully stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 view Post 101
+[Neo4j] Successfully stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 comment Post 102
+[Neo4j] Successfully stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 comment Post 102
+[Neo4j] Successfully stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-2 like Post 101
+[Consumer][post.interacted] Processing event: User user-2 like Post 101
+[Neo4j] Storing interaction: User user-2 like Post 101
+[Consumer][post.interacted] Processing event: User user-1 comment Post 102
+[Neo4j] Storing interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Processing event: User user-1 view Post 101
+[Neo4j] Storing interaction: User user-1 view Post 101
+[Consumer][post.interacted] Processing event: User user-2 like Post 101
+[Neo4j] Storing interaction: User user-2 like Post 101
+[Neo4j] Successfully stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 view Post 101
+[Consumer][post.interacted] Processing event: User user-1 comment Post 102
+[Neo4j] Storing interaction: User user-1 comment Post 102
+[Neo4j] Successfully stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 comment Post 102
+[Neo4j] Successfully stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-2 like Post 101
+[Neo4j] Successfully stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-2 like Post 101
+[Neo4j] Successfully stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 view Post 101
+[Neo4j] Successfully stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Processing event: User user-1 view Post 101
+[Neo4j] Storing interaction: User user-1 view Post 101
+[Consumer][post.interacted] Processing event: User user-2 like Post 101
+[Neo4j] Storing interaction: User user-2 like Post 101
+[Consumer][post.interacted] Processing event: User user-1 comment Post 102
+[Neo4j] Storing interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Processing event: User user-1 view Post 101
+[Neo4j] Storing interaction: User user-1 view Post 101
+[Neo4j] Successfully stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-2 like Post 101
+[Neo4j] Successfully stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 comment Post 102
+[Neo4j] Successfully stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 view Post 101
+[Neo4j] Successfully stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 view Post 101
 [OpenAI] Successfully generated tags: [ 'rabbitmq', 'async_communication', 'nodejs' ]
-[post.created] Generated tags: [ 'rabbitmq', 'async_communication', 'nodejs' ]
+[post.created] Generated tags: [ rabbitmq, async_communication, nodejs ]
 [Neo4j] Linking post ID 101 to tags: rabbitmq, async_communication, nodejs
 [Neo4j] Successfully linked post ID 101 to tags.
 [post.created] Successfully processed message for post ID: 101
-[post.created] Received message
 [validatePostCreatedMessage] Received data (type): string
 [validatePostCreatedMessage] Received data (start): {"postId":"102","userId":"user-2","text":"Neo4j graph databases are powerful for connected data. #ne
 [validatePostCreatedMessage] Parsed data type: object
@@ -56,46 +166,288 @@ Neo4j driver connected successfully.
 [post.created] Generating tags for: Neo4j graph databases are powerful for connected d...
 [OpenAI] Fetching tags for text starting with: Neo4j graph databases are powerful for connected d...
 [OpenAI] Successfully generated tags: [ 'neo4j', 'graphdb', 'connected_data' ]
-[post.created] Generated tags: [ 'neo4j', 'graphdb', 'connected_data' ]
+[post.created] Generated tags: [ neo4j, graphdb, connected_data ]
 [Neo4j] Linking post ID 102 to tags: neo4j, graphdb, connected_data
 [Neo4j] Successfully linked post ID 102 to tags.
 [post.created] Successfully processed message for post ID: 102
-RabbitMQ channel error: Channel closed by server: 406 (PRECONDITION-FAILED) with message "PRECONDITION_FAILED - unknown delivery tag 1"
-RabbitMQ channel closed.
-[OpenAI] Successfully generated tags: [ 'neo4j', 'graphdb', 'connected_data' ]
-[post.created] Generated tags: [ 'neo4j', 'graphdb', 'connected_data' ]
-[Neo4j] Linking post ID 102 to tags: neo4j, graphdb, connected_data
+[validatePostCreatedMessage] Received data (type): string
+[validatePostCreatedMessage] Received data (start): {"postId":"101","userId":"user-1","text":"Exploring RabbitMQ for async communication!","createdAt":"
+[validatePostCreatedMessage] Parsed data type: object
+[validatePostCreatedMessage] Attempting to validate with Zod...
+[validatePostCreatedMessage] Zod validation successful.
+[post.created] Generating tags for: Exploring RabbitMQ for async communication!...
+[OpenAI] Fetching tags for text starting with: Exploring RabbitMQ for async communication!...
+[OpenAI] Successfully generated tags: [ 'rabbitmq', 'async_communication', 'message_broker' ]
+[post.created] Generated tags: [ rabbitmq, async_communication, message_broker ]
+[Neo4j] Linking post ID 101 to tags: rabbitmq, async_communication, message_broker
+[Neo4j] Successfully linked post ID 101 to tags.
+[post.created] Successfully processed message for post ID: 101
+[validatePostCreatedMessage] Received data (type): string
+[validatePostCreatedMessage] Received data (start): {"postId":"102","userId":"user-2","text":"Neo4j graph databases are powerful for modeling connected 
+[validatePostCreatedMessage] Parsed data type: object
+[validatePostCreatedMessage] Attempting to validate with Zod...
+[validatePostCreatedMessage] Zod validation successful.
+[post.created] Generating tags for: Neo4j graph databases are powerful for modeling co...
+[OpenAI] Fetching tags for text starting with: Neo4j graph databases are powerful for modeling co...
+[OpenAI] Successfully generated tags: [ 'neo4j', 'graph_databases', 'connected_data' ]
+[post.created] Generated tags: [ neo4j, graph_databases, connected_data ]
+[Neo4j] Linking post ID 102 to tags: neo4j, graph_databases, connected_data
 [Neo4j] Successfully linked post ID 102 to tags.
-[post.created] Error processing message: IllegalOperationError: Channel closed
-    at Channel.<anonymous> (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/node_modules/.pnpm/amqplib@0.10.7/node_modules/amqplib/lib/channel.js:373:11)
-    at Channel.ack (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/node_modules/.pnpm/amqplib@0.10.7/node_modules/amqplib/lib/channel_model.js:213:10)
-    at handlePostCreated (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/jobs/consumers/postCreatedConsumer.ts:40:11)
-    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
-  stackAtStateChange: 'Stack capture: Channel closed by server: 406 (PRECONDITION-FAILED) with message "PRECONDITION_FAILED - unknown delivery tag 1"\n' +
-    '    at Channel.accept (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/node_modules/.pnpm/amqplib@0.10.7/node_modules/amqplib/lib/channel.js:330:15)\n' +
-    '    at Connection.mainAccept [as accept] (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/node_modules/.pnpm/amqplib@0.10.7/node_modules/amqplib/lib/connection.js:579:33)\n' +
-    '    at Socket.go (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/node_modules/.pnpm/amqplib@0.10.7/node_modules/amqplib/lib/connection.js:431:16)\n' +
-    '    at Socket.emit (node:events:524:28)\n' +
-    '    at emitReadable_ (node:internal/streams/readable:834:12)\n' +
-    '    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)'
-}
-[post.created] Error nacking message: IllegalOperationError: Channel closed
-    at Channel.<anonymous> (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/node_modules/.pnpm/amqplib@0.10.7/node_modules/amqplib/lib/channel.js:373:11)
-    at Channel.nack (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/node_modules/.pnpm/amqplib@0.10.7/node_modules/amqplib/lib/channel_model.js:223:10)
-    at handlePostCreated (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/jobs/consumers/postCreatedConsumer.ts:46:12)
-    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
-  stackAtStateChange: 'Stack capture: Channel closed by server: 406 (PRECONDITION-FAILED) with message "PRECONDITION_FAILED - unknown delivery tag 1"\n' +
-    '    at Channel.accept (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/node_modules/.pnpm/amqplib@0.10.7/node_modules/amqplib/lib/channel.js:330:15)\n' +
-    '    at Connection.mainAccept [as accept] (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/node_modules/.pnpm/amqplib@0.10.7/node_modules/amqplib/lib/connection.js:579:33)\n' +
-    '    at Socket.go (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/node_modules/.pnpm/amqplib@0.10.7/node_modules/amqplib/lib/connection.js:431:16)\n' +
-    '    at Socket.emit (node:events:524:28)\n' +
-    '    at emitReadable_ (node:internal/streams/readable:834:12)\n' +
-    '    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)'
-}
-SIGTERM received. Shutting down gracefully...
-Closing RabbitMQ resources...
+[post.created] Successfully processed message for post ID: 102
+[validatePostCreatedMessage] Received data (type): string
+[validatePostCreatedMessage] Received data (start): {"postId":"103","userId":"user-1","text":"Comparing TypeScript/Node.js with Java for backend develop
+[validatePostCreatedMessage] Parsed data type: object
+[validatePostCreatedMessage] Attempting to validate with Zod...
+[validatePostCreatedMessage] Zod validation successful.
+[post.created] Generating tags for: Comparing TypeScript/Node.js with Java for backend...
+[OpenAI] Fetching tags for text starting with: Comparing TypeScript/Node.js with Java for backend...
+[OpenAI] Successfully generated tags: [
+  'typescript',
+  'node_js',
+  'java',
+  'backend_development',
+  'efficiency_comparison'
+]
+[post.created] Generated tags: [ typescript, node_js, java, backend_development, efficiency_comparison ]
+[Neo4j] Linking post ID 103 to tags: typescript, node_js, java, backend_development, efficiency_comparison
+[Neo4j] Successfully linked post ID 103 to tags.
+[post.created] Successfully processed message for post ID: 103
+[validatePostCreatedMessage] Received data (type): string
+[validatePostCreatedMessage] Received data (start): {"postId":"104","userId":"user-2","text":"Using large language models via the OpenAI API for natural
+[validatePostCreatedMessage] Parsed data type: object
+[validatePostCreatedMessage] Attempting to validate with Zod...
+[validatePostCreatedMessage] Zod validation successful.
+[post.created] Generating tags for: Using large language models via the OpenAI API for...
+[OpenAI] Fetching tags for text starting with: Using large language models via the OpenAI API for...
+[OpenAI] Successfully generated tags: [
+  'openai_api',
+  'natural_language_processing',
+  'large_language_models'
+]
+[post.created] Generated tags: [ openai_api, natural_language_processing, large_language_models ]
+[Neo4j] Linking post ID 104 to tags: openai_api, natural_language_processing, large_language_models
+[Neo4j] Successfully linked post ID 104 to tags.
+[post.created] Successfully processed message for post ID: 104
+[validatePostCreatedMessage] Received data (type): string
+[validatePostCreatedMessage] Received data (start): {"postId":"105","userId":"user-3","text":"Building event-driven architectures often involves message
+[validatePostCreatedMessage] Parsed data type: object
+[validatePostCreatedMessage] Attempting to validate with Zod...
+[validatePostCreatedMessage] Zod validation successful.
+[post.created] Generating tags for: Building event-driven architectures often involves...
+[OpenAI] Fetching tags for text starting with: Building event-driven architectures often involves...
+[OpenAI] Successfully generated tags: [ 'event_driven_architecture', 'message_queues', 'service_decoupling' ]
+[post.created] Generated tags: [ event_driven_architecture, message_queues, service_decoupling ]
+[Neo4j] Linking post ID 105 to tags: event_driven_architecture, message_queues, service_decoupling
+[Neo4j] Successfully linked post ID 105 to tags.
+[post.created] Successfully processed message for post ID: 105
+[validatePostCreatedMessage] Received data (type): string
+[validatePostCreatedMessage] Received data (start): {"postId":"106","userId":"user-1","text":"How does knowledge representation in graph databases compa
+[validatePostCreatedMessage] Parsed data type: object
+[validatePostCreatedMessage] Attempting to validate with Zod...
+[validatePostCreatedMessage] Zod validation successful.
+[post.created] Generating tags for: How does knowledge representation in graph databas...
+[OpenAI] Fetching tags for text starting with: How does knowledge representation in graph databas...
+[OpenAI] Successfully generated tags: [
+  'knowledge_representation',
+  'graph_databases',
+  'relational_models',
+  'data_structure_comparison',
+  'database_technology'
+]
+[post.created] Generated tags: [ knowledge_representation, graph_databases, relational_models, data_structure_comparison, database_technology ]
+[Neo4j] Linking post ID 106 to tags: knowledge_representation, graph_databases, relational_models, data_structure_comparison, database_technology
+[Neo4j] Successfully linked post ID 106 to tags.
+[post.created] Successfully processed message for post ID: 106
+[validatePostCreatedMessage] Received data (type): string
+[validatePostCreatedMessage] Received data (start): {"postId":"107","userId":"user-2","text":"Considering migrating our monolith application to microser
+[validatePostCreatedMessage] Parsed data type: object
+[validatePostCreatedMessage] Attempting to validate with Zod...
+[validatePostCreatedMessage] Zod validation successful.
+[post.created] Generating tags for: Considering migrating our monolith application to ...
+[OpenAI] Fetching tags for text starting with: Considering migrating our monolith application to ...
+[OpenAI] Error getting tags: [
+  {
+    "validation": "regex",
+    "code": "invalid_string",
+    "message": "Must be snake_case",
+    "path": [
+      "extract_tags",
+      1
+    ]
+  }
+]
+[post.created] Error processing message for post ID 107: Error: [OpenAI] Failed to get tags: [
+  {
+    "validation": "regex",
+    "code": "invalid_string",
+    "message": "Must be snake_case",
+    "path": [
+      "extract_tags",
+      1
+    ]
+  }
+]
+    at getTagsFromOpenAI (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/lib/openai.ts:59:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async handlePostCreated (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/jobs/consumers/postCreatedConsumer.ts:57:16)
+    at async <anonymous> (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/jobs/consumers/postCreatedConsumer.ts:34:4)
+[post.created] Message nacked for post ID 107 due to error.
+[validatePostCreatedMessage] Received data (type): string
+[validatePostCreatedMessage] Received data (start): {"postId":"108","userId":"user-3","text":"The latest advancements in AI allow for sophisticated anal
+[validatePostCreatedMessage] Parsed data type: object
+[validatePostCreatedMessage] Attempting to validate with Zod...
+[validatePostCreatedMessage] Zod validation successful.
+[post.created] Generating tags for: The latest advancements in AI allow for sophistica...
+[OpenAI] Fetching tags for text starting with: The latest advancements in AI allow for sophistica...
+[OpenAI] Successfully generated tags: [ 'ai_advancements', 'text_analysis', 'unstructured_data' ]
+[post.created] Generated tags: [ ai_advancements, text_analysis, unstructured_data ]
+[Neo4j] Linking post ID 108 to tags: ai_advancements, text_analysis, unstructured_data
+[Consumer][post.interacted] Processing event: User user-2 like Post 101
+[Neo4j] Storing interaction: User user-2 like Post 101
+[Neo4j] Successfully stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Stored interaction: User user-2 like Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-2 like Post 101
+[Neo4j] Successfully linked post ID 108 to tags.
+[post.created] Successfully processed message for post ID: 108
+[validatePostCreatedMessage] Received data (type): string
+[validatePostCreatedMessage] Received data (start): {"postId":"101","userId":"user-1","text":"Exploring RabbitMQ for async communication!","createdAt":"
+[validatePostCreatedMessage] Parsed data type: object
+[validatePostCreatedMessage] Attempting to validate with Zod...
+[validatePostCreatedMessage] Zod validation successful.
+[post.created] Generating tags for: Exploring RabbitMQ for async communication!...
+[OpenAI] Fetching tags for text starting with: Exploring RabbitMQ for async communication!...
+[Consumer][post.interacted] Processing event: User user-1 comment Post 102
+[Neo4j] Storing interaction: User user-1 comment Post 102
+[Neo4j] Successfully stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Stored interaction: User user-1 comment Post 102
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 comment Post 102
+[OpenAI] Successfully generated tags: [ 'rabbitmq', 'async_communication', 'message_broker' ]
+[post.created] Generated tags: [ rabbitmq, async_communication, message_broker ]
+[Neo4j] Linking post ID 101 to tags: rabbitmq, async_communication, message_broker
+[Neo4j] Successfully linked post ID 101 to tags.
+[post.created] Successfully processed message for post ID: 101
+[validatePostCreatedMessage] Received data (type): string
+[validatePostCreatedMessage] Received data (start): {"postId":"102","userId":"user-2","text":"Neo4j graph databases are powerful for modeling connected 
+[validatePostCreatedMessage] Parsed data type: object
+[validatePostCreatedMessage] Attempting to validate with Zod...
+[validatePostCreatedMessage] Zod validation successful.
+[post.created] Generating tags for: Neo4j graph databases are powerful for modeling co...
+[OpenAI] Fetching tags for text starting with: Neo4j graph databases are powerful for modeling co...
+[Consumer][post.interacted] Processing event: User user-1 view Post 101
+[Neo4j] Storing interaction: User user-1 view Post 101
+[Neo4j] Successfully stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Stored interaction: User user-1 view Post 101
+[Consumer][post.interacted] Acknowledged message for interaction: User user-1 view Post 101
+[OpenAI] Successfully generated tags: [ 'neo4j', 'graph_databases', 'connected_data' ]
+[post.created] Generated tags: [ neo4j, graph_databases, connected_data ]
+[Neo4j] Linking post ID 102 to tags: neo4j, graph_databases, connected_data
+[Neo4j] Successfully linked post ID 102 to tags.
+[post.created] Successfully processed message for post ID: 102
+[validatePostCreatedMessage] Received data (type): string
+[validatePostCreatedMessage] Received data (start): {"postId":"103","userId":"user-1","text":"Comparing TypeScript/Node.js with Java for backend develop
+[validatePostCreatedMessage] Parsed data type: object
+[validatePostCreatedMessage] Attempting to validate with Zod...
+[validatePostCreatedMessage] Zod validation successful.
+[post.created] Generating tags for: Comparing TypeScript/Node.js with Java for backend...
+[OpenAI] Fetching tags for text starting with: Comparing TypeScript/Node.js with Java for backend...
+[OpenAI] Successfully generated tags: [
+  'typescript',
+  'node_js',
+  'java',
+  'backend_development',
+  'efficiency_comparison'
+]
+[post.created] Generated tags: [ typescript, node_js, java, backend_development, efficiency_comparison ]
+[Neo4j] Linking post ID 103 to tags: typescript, node_js, java, backend_development, efficiency_comparison
+[Neo4j] Successfully linked post ID 103 to tags.
+[post.created] Successfully processed message for post ID: 103
+[validatePostCreatedMessage] Received data (type): string
+[validatePostCreatedMessage] Received data (start): {"postId":"104","userId":"user-2","text":"Using large language models via the OpenAI API for natural
+[validatePostCreatedMessage] Parsed data type: object
+[validatePostCreatedMessage] Attempting to validate with Zod...
+[validatePostCreatedMessage] Zod validation successful.
+[post.created] Generating tags for: Using large language models via the OpenAI API for...
+[OpenAI] Fetching tags for text starting with: Using large language models via the OpenAI API for...
+[OpenAI] Successfully generated tags: [
+  'natural_language_processing',
+  'openai_api',
+  'large_language_models',
+  'api_integration'
+]
+[post.created] Generated tags: [ natural_language_processing, openai_api, large_language_models, api_integration ]
+[Neo4j] Linking post ID 104 to tags: natural_language_processing, openai_api, large_language_models, api_integration
+[Neo4j] Successfully linked post ID 104 to tags.
+[post.created] Successfully processed message for post ID: 104
+[validatePostCreatedMessage] Received data (type): string
+[validatePostCreatedMessage] Received data (start): {"postId":"105","userId":"user-3","text":"Building event-driven architectures often involves message
+[validatePostCreatedMessage] Parsed data type: object
+[validatePostCreatedMessage] Attempting to validate with Zod...
+[validatePostCreatedMessage] Zod validation successful.
+[post.created] Generating tags for: Building event-driven architectures often involves...
+[OpenAI] Fetching tags for text starting with: Building event-driven architectures often involves...
+[OpenAI] Successfully generated tags: [
+  'event_driven',
+  'message_queues',
+  'service_decoupling',
+  'architecture',
+  'software_design'
+]
+[post.created] Generated tags: [ event_driven, message_queues, service_decoupling, architecture, software_design ]
+[Neo4j] Linking post ID 105 to tags: event_driven, message_queues, service_decoupling, architecture, software_design
+[Neo4j] Successfully linked post ID 105 to tags.
+[post.created] Successfully processed message for post ID: 105
+[validatePostCreatedMessage] Received data (type): string
+[validatePostCreatedMessage] Received data (start): {"postId":"106","userId":"user-1","text":"How does knowledge representation in graph databases compa
+[validatePostCreatedMessage] Parsed data type: object
+[validatePostCreatedMessage] Attempting to validate with Zod...
+[validatePostCreatedMessage] Zod validation successful.
+[post.created] Generating tags for: How does knowledge representation in graph databas...
+[OpenAI] Fetching tags for text starting with: How does knowledge representation in graph databas...
+[OpenAI] Successfully generated tags: [
+  'graph_databases',
+  'relational_models',
+  'knowledge_representation',
+  'data_structures',
+  'database_comparison'
+]
+[post.created] Generated tags: [ graph_databases, relational_models, knowledge_representation, data_structures, database_comparison ]
+[Neo4j] Linking post ID 106 to tags: graph_databases, relational_models, knowledge_representation, data_structures, database_comparison
+[Neo4j] Successfully linked post ID 106 to tags.
+[post.created] Successfully processed message for post ID: 106
+[validatePostCreatedMessage] Received data (type): string
+[validatePostCreatedMessage] Received data (start): {"postId":"107","userId":"user-2","text":"Considering migrating our monolith application to microser
+[validatePostCreatedMessage] Parsed data type: object
+[validatePostCreatedMessage] Attempting to validate with Zod...
+[validatePostCreatedMessage] Zod validation successful.
+[post.created] Generating tags for: Considering migrating our monolith application to ...
+[OpenAI] Fetching tags for text starting with: Considering migrating our monolith application to ...
+[OpenAI] Successfully generated tags: [
+  'microservices',
+  'node_js',
+  'inter_service_communication',
+  'application_migration',
+  'software_architecture'
+]
+[post.created] Generated tags: [ microservices, node_js, inter_service_communication, application_migration, software_architecture ]
+[Neo4j] Linking post ID 107 to tags: microservices, node_js, inter_service_communication, application_migration, software_architecture
+[Neo4j] Successfully linked post ID 107 to tags.
+[post.created] Successfully processed message for post ID: 107
+[validatePostCreatedMessage] Received data (type): string
+[validatePostCreatedMessage] Received data (start): {"postId":"108","userId":"user-3","text":"The latest advancements in AI allow for sophisticated anal
+[validatePostCreatedMessage] Parsed data type: object
+[validatePostCreatedMessage] Attempting to validate with Zod...
+[validatePostCreatedMessage] Zod validation successful.
+[post.created] Generating tags for: The latest advancements in AI allow for sophistica...
+[OpenAI] Fetching tags for text starting with: The latest advancements in AI allow for sophistica...
+[OpenAI] Successfully generated tags: [ 'ai', 'text_analysis', 'unstructured_data' ]
+[post.created] Generated tags: [ ai, text_analysis, unstructured_data ]
+[Neo4j] Linking post ID 108 to tags: ai, text_analysis, unstructured_data
+[Neo4j] Successfully linked post ID 108 to tags.
+[post.created] Successfully processed message for post ID: 108
+SIGTERM received. Shutting down RabbitMQ client...
+Closing RabbitMQ connection...
 [Main] SIGTERM received. Shutting down gracefully...
-Closing RabbitMQ resources...
+Closing RabbitMQ connection...
 Closing Neo4j driver...
 Error closing RabbitMQ connection: IllegalOperationError: Connection closing
     at Connection.<anonymous> (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/node_modules/.pnpm/amqplib@0.10.7/node_modules/amqplib/lib/connection.js:634:11)
@@ -105,8 +457,8 @@ Error closing RabbitMQ connection: IllegalOperationError: Connection closing
     at new Promise (<anonymous>)
     at bound close (node:internal/util:441:12)
     at ChannelModel.close (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/node_modules/.pnpm/amqplib@0.10.7/node_modules/amqplib/lib/channel_model.js:26:66)
-    at closeRabbitMQ (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/jobs/rabbitmqClient.ts:94:24)
-    at shutdown (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/jobs/startConsumers.ts:19:7) {
+    at closeRabbitMQ (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/jobs/rabbitmqClient.ts:85:24)
+    at shutdown (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/jobs/startConsumers.ts:28:7) {
   stackAtStateChange: 'Stack capture: closeBecause called: Cheers, thanks\n' +
     '    at Connection.closeBecause (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/node_modules/.pnpm/amqplib@0.10.7/node_modules/amqplib/lib/connection.js:292:13)\n' +
     '    at Connection.close (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/node_modules/.pnpm/amqplib@0.10.7/node_modules/amqplib/lib/connection.js:280:10)\n' +
@@ -114,9 +466,9 @@ Error closing RabbitMQ connection: IllegalOperationError: Connection closing
     '    at new Promise (<anonymous>)\n' +
     '    at bound close (node:internal/util:441:12)\n' +
     '    at ChannelModel.close (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/node_modules/.pnpm/amqplib@0.10.7/node_modules/amqplib/lib/channel_model.js:26:66)\n' +
-    '    at closeRabbitMQ (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/jobs/rabbitmqClient.ts:94:24)\n' +
-    '    at shutdown (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/jobs/rabbitmqClient.ts:106:9)\n' +
-    '    at process.<anonymous> (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/jobs/rabbitmqClient.ts:111:29)'
+    '    at closeRabbitMQ (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/jobs/rabbitmqClient.ts:85:24)\n' +
+    '    at shutdown (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/jobs/rabbitmqClient.ts:99:9)\n' +
+    '    at process.<anonymous> (/Users/ahmed.abdelaziz/3b3ziz/my-tagger/jobs/rabbitmqClient.ts:104:29)'
 }
 Neo4j driver closed successfully.
 [Main] All connections closed.
